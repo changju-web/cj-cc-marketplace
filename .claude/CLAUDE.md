@@ -4,17 +4,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 仓库定位
 
-这是一个 **Claude Code 插件库**，用于存放面向团队业务场景的 skill。不是一个可构建/运行的项目，没有 build、test、lint 命令。
+这是一个 **Claude Code 插件 Marketplace**，用于管理和分发面向团队业务场景的插件。不是一个可构建/运行的项目，没有 build、test、lint 命令。
 
 ## 仓库结构
 
 ```text
-.claude-plugin/plugin.json   — 插件元数据（名称、版本、作者）
-skills/                      — 每个 skill 一个目录
-  <skill-name>/
-    SKILL.md                 — skill 指令（流程规则、触发条件、输出格式）
-    reference.md             — API 签名与类型参考（从 monorepo 提取的知识）
-    examples/                — 可落地的代码示例
+.claude-plugin/
+  marketplace.json            — Marketplace 清单（注册所有插件）
+cj-cc-plugin/                 — 单个插件目录
+  .claude-plugin/
+    plugin.json               — 插件元数据（名称、版本、作者）
+  skills/                     — 每个 skill 一个目录
+    <skill-name>/
+      SKILL.md                — skill 指令（流程规则、触发条件、输出格式）
+      reference.md            — API 签名与类型参考（从 monorepo 提取的知识）
+      examples/               — 可落地的代码示例
 ```
 
 ## Skill 文件职责分离
@@ -33,9 +37,15 @@ skill 中引用的组件和工具来自 monorepo `gx-web-lib`（`D:\Develop\Proj
 
 monorepo API 变更时，需要同步更新对应 skill 的 `reference.md`。
 
+## 新增插件
+
+1. 在根目录创建以插件名称命名的目录（`kebab-case`）
+2. 在插件目录下创建 `.claude-plugin/plugin.json`
+3. 在 `.claude-plugin/marketplace.json` 的 `plugins` 数组中注册新插件
+
 ## 新增 Skill 规范
 
-1. 在 `skills/` 下创建以 skill 名称命名的目录（`kebab-case`）
+1. 在 `<plugin>/skills/` 下创建以 skill 名称命名的目录（`kebab-case`）
 2. 必须包含 `SKILL.md`（frontmatter 含 `name` 和 `description`）
 3. 如果依赖外部库 API，在同级创建 `reference.md` 并在 `SKILL.md` 中引用
 4. 提供至少一组 `examples/`

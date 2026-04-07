@@ -1,0 +1,13 @@
+{
+  "name": "cj-cc-marketplace",
+  "owner": {
+    "name": "长聚科技"
+  },
+  "plugins": [
+    {
+      "name": "ep-comp",
+      "source": "./ep-comp",
+      "description": "基于 @gx-web/ep-comp 的业务代码生成插件"
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 ---
-name: ep-comp-swagger-list-page
+name: crud-page
 description: Generate ep-comp pagination list page scaffolds from Swagger, Knife4j, OpenAPI JSON, or request/response examples. Use this whenever the user wants to turn API docs into `generateTableColumns`, `generateFormItems`, `useTablePage`, `GXForm`, and `GXPaginationTable` based list pages, even if they only say "根据 Swagger 生成列表页". If the context clearly points to an `@gx-web/ep-comp` list page, use this skill proactively.
 ---
 

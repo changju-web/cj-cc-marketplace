@@ -1,0 +1,11 @@
+{
+  "name": "ep-comp",
+  "description": "基于 @gx-web/ep-comp 的业务代码生成插件",
+  "version": "1.0.0",
+  "repository": "https://github.com/TurtleWXG/cj-cc-marketplace/ep-comp",
+  "author": {
+    "name": "wangjiahui",
+    "email": "13226651554@163.com",
+    "url": "https://github.com/TurtleWXG"
+  }
+}
