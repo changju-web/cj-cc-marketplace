@@ -13,7 +13,7 @@
 ### 1. 添加 Marketplace
 
 ```bash
-/plugin marketplace add TurtleWXG/cj-cc-marketplace
+/plugin marketplace add changju-web/cj-cc-marketplace
 ```
 
 ### 2. 安装插件
