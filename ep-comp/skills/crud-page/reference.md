@@ -110,7 +110,7 @@ onMounted(loadList)
 
 ### useStateRef
 
-响应式状态管理，支持设置与重置。
+响应式状态管理,支持设置与重置。
 
 **签名：**
 
@@ -126,6 +126,60 @@ function useStateRef<T extends AnyObject>(createState: () => T): [
 
 ```ts
 const [search, , resetSearch] = useStateRef(() => getModelFromJson(AlarmVO))
+```
+
+### useCompRef
+
+用于获取子组件 ref,配合 `defineExpose` 使用。
+
+**签名：**
+
+```ts
+function useCompRef<T extends abstract new (...args: any) => any>(
+  component: T
+): Ref<InstanceType<T> | undefined>
+```
+
+**使用示例：**
+
+```ts
+// 引用自定义组件
+import XxxAdd from './components/xxx-add.vue'
+const XxxAddRef = useCompRef(XxxAdd)
+XxxAddRef.value?.init()
+
+// 引用 Element Plus 组件
+const FormRef = useCompRef<typeof import('element-plus')['ElForm']>()
+await FormRef.value?.validate()
+```
+
+**要点：**
+
+- 对于自定义组件,传入组件本身（非字符串）,返回类型自动推断 `defineExpose` 暴露的方法
+- 对于 Element Plus 内置组件,使用 `typeof import('element-plus')['ElXxx']` 获取类型
+
+### useToggle
+
+布尔值状态切换,常用于 loading 切换和对话框显隐。默认值为 `false`。
+
+**签名：**
+
+```ts
+function useToggle(defaultValue?: boolean): [Ref<boolean>, (value?: boolean) => void]
+```
+
+**使用示例：**
+
+```ts
+// 对话框显隐
+const [visible, setVisible] = useToggle(false)
+setVisible(true)   // 打开
+setVisible(false)  // 关闭
+
+// Loading 状态
+const [loading, setLoading] = useToggle(false)
+setLoading(true)   // 开始加载
+setLoading(false)  // 结束加载
 ```
 
 ---
@@ -343,57 +397,7 @@ interface GXFormProps {
 
 ---
 
-## 6. 完整列表页模板
-
-```vue
-<script setup lang="ts">
-import { useStateRef, useTablePage } from '@gx-web/tool'
-import { onMounted } from 'vue'
-import { getModelFromJson } from '@gx-web/core'
-import { GXPaginationTable, GXSearch, generateFormItems, generateTableColumns } from '@gx-web/ep-comp'
-import { XxxModel } from './model'
-import { loadPage } from './api'
-
-const [search, , resetSearch] = useStateRef(() => getModelFromJson(XxxModel))
-
-const [list, { page, loading, loadList, reloadList, onChange }] = useTablePage(
-  ({ current, size }) =>
-    loadPage({ ...search.value, pageNum: current, pageSize: size }).then(res => ({
-      records: res.data.records,
-      total: res.data.total
-    }))
-)
-
-const columns = generateTableColumns(XxxModel, [
-  'field1',
-  'field2',
-  'field3'
-])
-
-const searchItems = generateFormItems(XxxModel, [
-  'field1',
-  { prop: 'field2', type: 'select' }
-])
-
-onMounted(loadList)
-</script>
-
-<template>
-  <GXPaginationTable
-    v-model:page="page.current"
-    v-model:limit="page.size"
-    :columns="columns"
-    :data="list"
-    :loading="loading"
-    :total="page.total"
-    @pagination="onChange"
-  >
-    <template #header>
-      <GXSearch :items="searchItems" :form="search" @submit="loadList" @reset="resetSearch();reloadList()" />
-    </template>
-  </GXPaginationTable>
-</template>
-```
+## 6. 完整 CRUD 页面模板
 
 ### Model 文件模板
 
@@ -401,17 +405,37 @@ onMounted(loadList)
 // model/index.ts
 import { FieldName } from '@gx-web/core'
 
+/** 查询参数模型 */
 export class XxxQueryModel {
+  /** 关键字 */
   @FieldName('关键字')
   keyword!: string
 }
 
+/** 列表项模型 */
 export class XxxListItemModel {
+  /** 字段1 */
   @FieldName('字段1')
   field1!: string
 
+  /** 字段2 */
   @FieldName('字段2')
   field2!: string
+
+  id!: string
+}
+
+/** 新增/编辑表单模型 */
+export class XxxFormModel {
+  /** 字段1 */
+  @FieldName('字段1')
+  field1!: string
+
+  /** 字段2 */
+  @FieldName('字段2')
+  field2!: string
+
+  id!: string
 }
 ```
 
@@ -420,16 +444,240 @@ export class XxxListItemModel {
 ```ts
 // api/index.ts
 import useAxios from '@base-lib/hooks/core/useAxios'
-import type { XxxListItemModel, XxxQueryModel } from '../model'
+import type { XxxListItemModel, XxxQueryModel, XxxFormModel } from '../model'
 
 const request = useAxios()
 
+/** 分页查询 */
 export const loadPage = (params: XxxQueryModel) => {
   return request.get<ResPage<XxxListItemModel>>({
     url: '/xxx/page',
     params
   })
 }
+
+/** 新增 */
+export const add = (data: XxxFormModel) => {
+  return request.post({
+    url: '/xxx',
+    data
+  })
+}
+
+/** 更新 */
+export const update = (data: XxxFormModel) => {
+  return request.put({
+    url: '/xxx',
+    data
+  })
+}
+
+/** 删除 */
+export const removeById = (id: string) => {
+  return request.delete({
+    url: `/xxx/${id}`
+  })
+}
+```
+
+### 弹窗组件模板
+
+```vue
+<!-- components/xxx-add.vue -->
+<script setup lang="ts">
+import { computed, reactive } from 'vue'
+import type { FormRules } from 'element-plus'
+import { ElMessage } from 'element-plus'
+import { useCompRef, useStateRef, useToggle } from '@gx-web/tool'
+import { getModelFromJson } from '@gx-web/core'
+import { generateFormItems, GXForm } from '@gx-web/ep-comp'
+import { add, update } from '../api'
+import type { XxxListItemModel } from '../model'
+import { XxxFormModel } from '../model'
+
+defineOptions({
+  name: 'XxxAdd'
+})
+
+const emit = defineEmits<{
+  submitted: []
+}>()
+
+const [visible, setVisible] = useToggle(false)
+
+const [loading, setLoading] = useToggle(false)
+
+const [form, , resetForm] = useStateRef(() => getModelFromJson(XxxFormModel))
+
+const isEdit = computed(() => !!form.value.id)
+
+const rules = reactive<FormRules>({
+  field1: [{ required: true, message: '请输入字段1', trigger: 'blur' }]
+})
+
+const dialogTitle = computed(() => `${isEdit.value ? '编辑' : '新增'}xxx`)
+
+// 简单字段自动生成
+const formItems = generateFormItems(XxxFormModel, [
+  'field1',
+  'field2'
+])
+
+const FormRef = useCompRef<typeof import('element-plus')['ElForm']>()
+
+/** 新增模式 */
+const init = () => {
+  setVisible(true)
+}
+
+/** 编辑模式 */
+const initEdit = (row: XxxListItemModel) => {
+  resetForm()
+  form.value = { ...row }
+  setVisible(true)
+}
+
+/** 提交 */
+const handleSubmit = async () => {
+  try {
+    setLoading(true)
+    await FormRef.value?.validate()
+    const { message } = await (isEdit.value ? update(form.value) : add(form.value))
+    ElMessage.success(message)
+    setVisible(false)
+    emit('submitted')
+  }
+  catch (error) {
+    console.error('handleSubmit => error', error)
+  }
+  finally {
+    setLoading(false)
+  }
+}
+
+/** 关闭重置 */
+const close = () => {
+  resetForm()
+}
+
+defineExpose({ init, initEdit })
+</script>
+
+<template>
+  <ElDialog v-model="visible" :title="dialogTitle" width="500px" @closed="close">
+    <ElForm ref="FormRef" v-loading="loading" :model="form" :rules="rules" label-width="120px">
+      <GXForm :items="formItems" :form="form" />
+      <!-- 复杂字段手动补充示例 -->
+      <!--
+      <ElFormItem label="xxx" prop="xxx">
+        <CustomComponent v-model="form.xxx" />
+      </ElFormItem>
+      -->
+    </ElForm>
+    <template #footer>
+      <ElButton :loading="loading" @click="setVisible(false)">取消</ElButton>
+      <ElButton type="primary" :loading="loading" @click="handleSubmit">确定</ElButton>
+    </template>
+  </ElDialog>
+</template>
+```
+
+### 主页面模板
+
+```vue
+<!-- index.vue -->
+<script setup lang="ts">
+import { defineAsyncComponent, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import { useCompRef, useStateRef, useTablePage } from '@gx-web/tool'
+import { getModelFromJson } from '@gx-web/core'
+import { GXPaginationTable, GXSearch, generateFormItems, generateTableColumns } from '@gx-web/ep-comp'
+import { XxxQueryModel, XxxListItemModel } from './model'
+import { loadPage, removeById } from './api'
+
+defineOptions({
+  name: 'XxxManage'
+})
+
+const XxxAdd = defineAsyncComponent(() => import('./components/xxx-add.vue'))
+
+const XxxAddRef = useCompRef(XxxAdd)
+
+const [search, , resetSearch] = useStateRef(() => getModelFromJson(XxxQueryModel))
+
+const [list, { page, loading, loadList, reloadList, onChange }] = useTablePage<XxxListItemModel>(
+  ({ current, size }) =>
+    loadPage({ ...search.value, pageNum: current, pageSize: size }).then(res => ({
+      records: res.data.records,
+      total: res.data.total
+    }))
+)
+
+const columns = generateTableColumns(XxxListItemModel, [
+  'field1',
+  'field2'
+])
+
+const searchItems = generateFormItems(XxxQueryModel, [
+  'keyword'
+])
+
+/** 新增 */
+const handleAdd = () => {
+  XxxAddRef.value?.init()
+}
+
+/** 编辑 */
+const handleEdit = (row: XxxListItemModel) => {
+  XxxAddRef.value?.initEdit(row)
+}
+
+/** 删除 */
+const handleDel = async (row: XxxListItemModel) => {
+  try {
+    const { message } = await removeById(row.id)
+    ElMessage.success(message)
+    loadList()
+  }
+  catch (error) {
+    console.error('error =>', error)
+  }
+}
+
+onMounted(loadList)
+</script>
+
+<template>
+  <div class="xxx-manage">
+    <GXPaginationTable
+      v-model:page="page.current"
+      v-model:limit="page.size"
+      :columns="columns"
+      :data="list"
+      :loading="loading"
+      :total="page.total"
+      @pagination="onChange"
+    >
+      <template #header>
+        <GXSearch v-model="search" :items="searchItems" @submit="loadList" @reset="resetSearch();reloadList()" />
+      </template>
+
+      <template #action="{ row }">
+        <ElButton link type="primary" @click="handleEdit(row)">编辑</ElButton>
+        <ElPopconfirm title="是否删除?" placement="left" @confirm="handleDel(row)">
+          <template #reference>
+            <ElButton link type="danger">删除</ElButton>
+          </template>
+        </ElPopconfirm>
+      </template>
+
+      <template #action-bar>
+        <ElButton type="primary" @click="handleAdd">新增</ElButton>
+      </template>
+    </GXPaginationTable>
+    <XxxAdd ref="XxxAddRef" @submitted="reloadList" />
+  </div>
+</template>
 ```
 
 ---

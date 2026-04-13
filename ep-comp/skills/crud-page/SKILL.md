@@ -1,23 +1,25 @@
 ---
 name: crud-page
-description: Generate ep-comp pagination list page scaffolds from Swagger, Knife4j, OpenAPI JSON, or request/response examples. Use this whenever the user wants to turn API docs into `generateTableColumns`, `generateFormItems`, `useTablePage`, `GXForm`, and `GXPaginationTable` based list pages, even if they only say "根据 Swagger 生成列表页". If the context clearly points to an `@gx-web/ep-comp` list page, use this skill proactively.
+description: Generate ep-comp CRUD page scaffolds from Swagger, Knife4j, OpenAPI JSON, or request/response examples. Use this whenever the user wants to turn API docs into `generateTableColumns`, `generateFormItems`, `useTablePage`, `GXForm`, `GXPaginationTable`, and CRUD dialog components based pages, even if they only say "根据 Swagger 生成列表页". If the context clearly points to an `@gx-web/ep-comp` page, use this skill proactively.
 ---
 
-# ep-comp Swagger 列表页生成
+# ep-comp Swagger CRUD 页面生成
 
 ## Overview
 
-这个 skill 用于把 Swagger / Knife4j / OpenAPI 文档，或用户直接提供的请求/响应示例，转成基于 `@gx-web/ep-comp` 的分页列表页接入代码。
+这个 skill 用于把 Swagger / Knife4j / OpenAPI 文档，或用户直接提供的请求/响应示例，转成基于 `@gx-web/ep-comp` 的 **完整 CRUD 页面**接入代码。
 
-目标不是解释单个组件 API，而是生成列表页主链路：
+目标不是解释单个组件 API，而是生成 CRUD 页面主链路：
 
 - `generateTableColumns`
 - `generateFormItems`
 - `useTablePage`
 - `GXForm`
 - `GXPaginationTable`
+- 新增/编辑弹窗组件（`ElDialog` + 表单验证 + `defineExpose`）
+- 完整 CRUD API（查询/新增/编辑/删除）
 
-默认只覆盖**单个分页查询页面**。只有用户明确要求时，才扩展到 CRUD、详情、操作列方案等内容。
+默认生成**完整 CRUD 页面**，包含分页查询、新增/编辑弹窗、操作列（编辑/删除）。
 
 ## When to Use
 
@@ -40,9 +42,9 @@ description: Generate ep-comp pagination list page scaffolds from Swagger, Knife
 
 - 用户只问 `generateTableColumns` 的单独用法
 - 用户只问 `GXForm` 或 `GXPaginationTable` 的 props
-- 用户要做的是新增页、详情页、弹窗页，而不是分页列表页
 - 用户给的是接口文档，但目标不是 `ep-comp` 体系
 - 用户仅想阅读 Swagger 文档，不需要生成页面骨架
+- 用户要做的是纯详情页（无 CRUD 操作），而非列表 CRUD 页面
 
 ## Input Sources
 
@@ -110,15 +112,18 @@ description: Generate ep-comp pagination list page scaffolds from Swagger, Knife
 
 ## Output Format
 
-输出固定为以下五段，顺序不要变：
+输出固定为以下八段，顺序不要变：
 
 1. `Model`
 2. `API`
 3. `查询表单`
-4. `表格分页`
-5. `待确认项`
+4. `表格分页 + 操作列`
+5. `弹窗组件`
+6. `主页面集成`
+7. `类型导出`
+8. `待确认项`
 
-这样做的原因是：第三方接入更关心“能否直接抄用”和“哪里还要自己补”，固定结构比自由发挥更稳定。
+这样做的原因是：第三方接入更关心”能否直接抄用”和”哪里还要自己补”，固定结构比自由发挥更稳定。
 
 ---
 
@@ -126,8 +131,9 @@ description: Generate ep-comp pagination list page scaffolds from Swagger, Knife
 
 至少生成：
 
-- `XxxQueryModel`
-- `XxxListItemModel`
+- `XxxQueryModel` — 查询参数
+- `XxxListItemModel` — 列表展示字段
+- `XxxFormModel` — 新增/编辑表单字段
 
 命名规则：
 
@@ -139,13 +145,25 @@ description: Generate ep-comp pagination list page scaffolds from Swagger, Knife
 
 - 优先保留文档中能确认的字段
 - 字段中文语义清楚时，可用 `@FieldName(...)`
-- 类型或含义不明确时，不要强猜，统一放到“待确认项”里，并明确写出“需人工确认”
+- **所有字段必须添加 `/** ... */` 块注释**，确保 IDE 悬停可见
+- **类本身也必须添加块注释**
+- 块注释内容与 `@FieldName` 保持一致
+- 类型或含义不明确时，不要强猜，统一放到”待确认项”里，并明确写出”需人工确认”
+
+`XxxFormModel` 规则：
+
+- 仅包含可编辑字段，不包含纯展示字段（如 `createdTime`、`updatedTime`）
+- `id` 字段必须包含，用于区分新增/编辑模式
+- 字段应与 API 文档中的新增/编辑请求体对应
 
 ## 2. API
 
 至少生成：
 
-- 分页接口函数
+- 分页接口函数（`loadPage`）
+- 新增接口函数（`add`）
+- 更新接口函数（`update`）
+- 删除接口函数（`removeById`）
 - 请求参数类型
 - 响应类型
 - 与 `useTablePage` 对接的返回映射
@@ -156,6 +174,9 @@ description: Generate ep-comp pagination list page scaffolds from Swagger, Knife
 - 可用占位写法，例如 `request.post(...)`
 - 必须提示用户替换为项目里的真实请求封装
 - 最终都要落到 `useTablePage` 需要的 `Promise<{ records, total }>` 契约
+- `add` 和 `update` 使用 `XxxFormModel` 作为参数类型
+- `removeById` 接受 `id: string`
+- 所有 API 函数添加块注释说明用途
 
 ### 项目约定识别
 
@@ -312,14 +333,15 @@ const [list, { page, loading, loadList, reloadList, onChange }] = useTablePage((
 - 查询模型默认值
 - 查询与重置的基本交互说明
 
-## 4. 表格分页
+## 4. 表格分页 + 操作列
 
 至少生成：
 
-- `generateTableColumns(...)`
+- `generateTableColumns(...)` — 只配置数据列，不包含操作列
 - `useTablePage(...)`
 - `GXPaginationTable` 示例
 - `loading`、`page`、`total`、`onChange` 的联动方式
+- 操作列（编辑/删除按钮）
 
 这里必须遵循当前推荐链路：
 
@@ -330,7 +352,74 @@ const [list, { page, loading, loadList, reloadList, onChange }] = useTablePage((
 - 使用 `GXPaginationTable`
 - 不回退到已移除的 `getEPTableColumns`
 
-## 5. 待确认项
+操作列规则：
+
+- **统一通过 `GXPaginationTable` 的 `#action` slot 渲染**，不在 `generateTableColumns` 中使用 render 配置
+- 编辑按钮：`<ElButton link type="primary">`，调用弹窗组件的 `initEdit(row)` 方法
+- 删除按钮：使用 `<ElPopconfirm title="是否删除?" placement="left">` 二次确认
+- 删除操作使用 try/catch 错误处理
+
+操作列 slot 模板：
+
+```vue
+<template #action="{ row }">
+  <ElButton link type="primary" @click="handleEdit(row)">编辑</ElButton>
+  <ElPopconfirm title="是否删除?" placement="left" @confirm="handleDel(row)">
+    <template #reference>
+      <ElButton link type="danger">删除</ElButton>
+    </template>
+  </ElPopconfirm>
+</template>
+```
+
+## 5. 弹窗组件
+
+生成独立文件 `components/xxx-add.vue`，使用 `ElDialog`。
+
+核心模式：
+
+- `defineOptions({ name: 'XxxAdd' })` 设置组件名称
+- `useToggle` 管理显隐，额外维护 `loading` 状态
+- `useStateRef` 管理表单数据（支持 reset）
+- `computed` 判断 `isEdit`（基于 `form.value.id` 是否存在）
+- `defineExpose({ init, initEdit })` 暴露方法给父组件
+- 提交成功后 `emit('submitted')` 通知父组件刷新
+- `@closed` 事件中重置表单
+- CRUD 操作使用 try/catch/finally 错误处理，finally 中关闭 loading
+
+表单生成策略（混合模式）：
+
+1. 简单字段（input、select、textarea）：使用 `generateFormItems` + `GXForm` 自动生成
+2. 复杂字段（树选择器、上传、自定义组件）：手动 `ElFormItem`
+3. 在输出中明确标注哪些是自动生成、哪些需要手动补充
+
+弹窗表单规范：
+
+- `ElForm` 设置 `label-width="120px"`
+- 表单验证使用 `reactive<FormRules>`
+- 表单区域添加 `v-loading="loading"`
+- 取消和确定按钮都添加 `:loading="loading"`
+
+## 6. 主页面集成
+
+生成完整 `index.vue`，集成搜索、表格、操作列和弹窗组件。
+
+关键规范：
+
+- `defineOptions({ name: 'XxxManage' })` 设置组件名称
+- `defineAsyncComponent` 异步加载弹窗组件
+- 模板根节点为 `<div class="模块名-kebab-case">`
+- `GXSearch` 使用 `v-model="search"` 绑定
+- 操作列通过 `#action` slot 渲染（见段落 4）
+- 新增按钮通过 `#action-bar` slot 渲染
+- 弹窗组件使用 `useCompRef` 获取引用
+- 弹窗的 `@submitted` 事件触发 `reloadList()`
+
+## 7. 类型导出
+
+各目录 `index.ts` 统一导出。model 和 api 的类型定义通过文件内直接 export 暴露。
+
+## 8. 待确认项
 
 这一段必须始终输出。
 
@@ -361,6 +450,11 @@ const [list, { page, loading, loadList, reloadList, onChange }] = useTablePage((
 - 是否还需要操作列
 - 是否需要扩展 CRUD / action
 - 请求封装、鉴权、headers 是否需要对接项目实际实现
+- 弹窗表单字段是否与列表展示字段一致
+- 是否有复杂字段需要手动覆盖（树选择器、上传等）
+- 操作列按钮权限控制
+- 是否需要详情页
+- 弹窗宽度是否合适
 
 ## Field Inference Rules
 
@@ -501,6 +595,7 @@ export type ResPage<T> = Res<{
 - `api/index.ts`
 - `model/index.ts`
 - `index.vue`
+- `components/xxx-add.vue`
 
 ### 条件生成
 
@@ -550,10 +645,9 @@ export type ResPage<T> = Res<{
 
 ## Default Behavioral Constraints
 
-- 默认只做单个分页查询页面
-- 默认不扩展到 CRUD / 详情 / 权限
+- 默认生成完整 CRUD 页面（查询 + 新增/编辑弹窗 + 操作列）
 - 默认不做额外抽象
-- 优先给最小可用主链路
+- 优先给最小可用 CRUD 主链路
 - 用户一旦提供目录结构，再切换到落地代码模式
 
 ## Example Framing
@@ -562,7 +656,7 @@ export type ResPage<T> = Res<{
 
 > 给你一个 Swagger 地址，帮我生成列表页
 
-而当前上下文已经明确这是 `ep-comp` 项目，那么你应直接进入此 skill，并按五段结构输出。
+而当前上下文已经明确这是 `ep-comp` 项目，那么你应直接进入此 skill，并按八段结构输出。
 
 如果用户说：
 
@@ -575,9 +669,12 @@ export type ResPage<T> = Res<{
 一次成功输出至少应满足：
 
 - 正确识别分页接口的请求参数与返回结构
-- 输出 `Model`、`API`、`查询表单`、`表格分页`、`待确认项` 五段结构
-- 推断项明确标注“需人工确认”
-- 不擅自扩展到未要求的业务能力
+- 输出 `Model`、`API`、`查询表单`、`表格分页 + 操作列`、`弹窗组件`、`主页面集成`、`类型导出`、`待确认项` 八段结构
+- Model 包含 QueryModel、ListItemModel、FormModel 三个模型，所有字段含块注释
+- API 包含 loadPage、add、update、removeById 四个接口
+- 弹窗组件使用 ElDialog + try/catch/finally + loading 状态
+- 主页面模板单根节点 `<div class=”模块名”>`，defineAsyncComponent 加载弹窗
+- 推断项明确标注”需人工确认”
 - 用户补充模块名或目录结构后，可继续生成落地代码
 
 ## API Reference
@@ -587,7 +684,7 @@ export type ResPage<T> = Res<{
 reference.md 包含以下内容：
 
 - `@gx-web/core`：`@FieldName`、`getModelFromJson`、`getModelFieldName`
-- `@gx-web/tool`：`useTablePage`、`useStateRef`
+- `@gx-web/tool`：`useTablePage`、`useStateRef`、`useCompRef`、`useToggle`
 - `@gx-web/ep-comp`：`generateTableColumns`、`generateFormItems`、`GXPaginationTable`、`GXForm`、`GXSearch`、`useComponentMap`
 - 所有类型定义：`EPTableColumnConfigType`、`EPFormItemConfigType`、`GXFormProps`、`GXPaginationTableProps`
-- 完整列表页模板（index.vue + model + api）
+- 完整 CRUD 页面模板（index.vue + model + api + dialog component）

@@ -204,7 +204,6 @@ const columns = generateTableColumns(XxxListItemModel, [
 import { computed, reactive } from 'vue'
 import type { FormRules } from 'element-plus'
 import { ElMessage } from 'element-plus'
-import { useCompRef, useStateRef } from '@gx-web/tool'
 import { useCompRef, useStateRef, useToggle } from '@gx-web/tool'
 import { getModelFromJson } from '@gx-web/core'
 import { generateFormItems, GXForm } from '@gx-web/ep-comp'

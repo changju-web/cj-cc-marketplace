@@ -1,5 +1,13 @@
 import { FieldName } from '@gx-web/core'
 
+/** 告警查询模型 */
+export class AlarmQueryModel {
+  /** 设备SN */
+  @FieldName('设备SN')
+  deviceSn!: string
+}
+
+/** 告警列表项模型 */
 export class AlarmVO {
   /** 告警代码 */
   @FieldName('告警代码')
@@ -32,4 +40,21 @@ export class AlarmVO {
   /** 场所ID */
   @FieldName('场所ID')
   placeId!: string
+}
+
+/** 告警新增/编辑表单模型 */
+export class AlarmFormModel {
+  /** 告警代码 */
+  @FieldName('告警代码')
+  alarmCode!: string
+
+  /** 告警标题 */
+  @FieldName('告警标题')
+  alarmTitle!: string
+
+  /** 告警详情 */
+  @FieldName('告警详情')
+  alarmDetail!: string
+
+  id!: string
 }
