@@ -13,6 +13,11 @@
       "name": "notify-hook",
       "source": "./notify-hook",
       "description": "Windows Toast 通知 hook 插件"
+    },
+    {
+      "name": "openspec-workflow",
+      "source": "./openspec-workflow",
+      "description": "OpenSpec × Superpowers 协作流程编排插件"
     }
   ]
 }
