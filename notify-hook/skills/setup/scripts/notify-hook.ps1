@@ -9,12 +9,19 @@ param(
 
 function Write-Log {
     param([string]$Msg)
+    $logFile = Join-Path $env:TEMP 'claude-notify-debug.log'
+    # Truncate log if over 1MB
+    if ((Test-Path $logFile) -and ((Get-Item $logFile).Length -gt 1MB)) {
+        $lines = Get-Content $logFile -Tail 100
+        $lines | Set-Content $logFile -ErrorAction SilentlyContinue
+    }
     $ts = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
     $line = "[$ts] [notify-hook] $Msg"
-    Add-Content -Path (Join-Path $env:TEMP 'claude-notify-debug.log') -Value $line -ErrorAction SilentlyContinue
+    Add-Content -Path $logFile -Value $line -ErrorAction SilentlyContinue
 }
 
-Add-Type -TypeDefinition @"
+if (-not ('ConsoleHelper' -as [type])) {
+    Add-Type -TypeDefinition @"
 using System;
 using System.Runtime.InteropServices;
 public class ConsoleHelper {
@@ -22,11 +29,15 @@ public class ConsoleHelper {
     public static extern IntPtr GetConsoleWindow();
 }
 "@
+}
 
 Write-Log "Triggered: Message='$Message' Force=$Force PID=$PID"
 
 # Strategy 1: Process tree traversal (existing logic)
-$proc = Get-Process -Id $PID
+try { $proc = Get-Process -Id $PID -ErrorAction Stop } catch {
+    Write-Log "  Get-Process self failed: $_"
+    $proc = $null
+}
 $targetHwnd = [IntPtr]::Zero
 $strategy = 'none'
 

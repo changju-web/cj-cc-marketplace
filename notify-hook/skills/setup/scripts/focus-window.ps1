@@ -5,14 +5,21 @@ param([string]$Uri = '')
 
 function Write-Log {
     param([string]$Msg)
+    $logFile = Join-Path $env:TEMP 'claude-notify-debug.log'
+    # Truncate log if over 1MB
+    if ((Test-Path $logFile) -and ((Get-Item $logFile).Length -gt 1MB)) {
+        $lines = Get-Content $logFile -Tail 100
+        $lines | Set-Content $logFile -ErrorAction SilentlyContinue
+    }
     $ts = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
     $line = "[$ts] [focus-window] $Msg"
-    Add-Content -Path (Join-Path $env:TEMP 'claude-notify-debug.log') -Value $line -ErrorAction SilentlyContinue
+    Add-Content -Path $logFile -Value $line -ErrorAction SilentlyContinue
 }
 
 Write-Log "Triggered: Uri='$Uri'"
 
-Add-Type -TypeDefinition @"
+if (-not ('FocusWindow' -as [type])) {
+    Add-Type -TypeDefinition @"
 using System;
 using System.Runtime.InteropServices;
 public class FocusWindow {
@@ -28,6 +35,7 @@ public class FocusWindow {
     public static extern bool IsIconic(IntPtr hWnd);
 }
 "@
+}
 
 # Parse HWND from URL parameter: claude-focus://activate?hwnd=123456
 if ($Uri -match 'hwnd=(\d+)') {

@@ -10,14 +10,21 @@ param(
 
 function Write-Log {
     param([string]$Msg)
+    $logFile = Join-Path $env:TEMP 'claude-notify-debug.log'
+    # Truncate log if over 1MB
+    if ((Test-Path $logFile) -and ((Get-Item $logFile).Length -gt 1MB)) {
+        $lines = Get-Content $logFile -Tail 100
+        $lines | Set-Content $logFile -ErrorAction SilentlyContinue
+    }
     $ts = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
     $line = "[$ts] [notify-toast] $Msg"
-    Add-Content -Path (Join-Path $env:TEMP 'claude-notify-debug.log') -Value $line -ErrorAction SilentlyContinue
+    Add-Content -Path $logFile -Value $line -ErrorAction SilentlyContinue
 }
 
 Import-Module BurntToast
 
-Add-Type -TypeDefinition @"
+if (-not ('WindowState' -as [type])) {
+    Add-Type -TypeDefinition @"
 using System;
 using System.Runtime.InteropServices;
 public class WindowState {
@@ -27,6 +34,7 @@ public class WindowState {
     public static extern bool IsWindow(IntPtr hWnd);
 }
 "@
+}
 
 Write-Log "Triggered: Hwnd=$Hwnd Message='$Message' Force=$Force"
 
