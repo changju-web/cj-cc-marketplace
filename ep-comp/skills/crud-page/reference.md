@@ -584,6 +584,8 @@ defineExpose({ init, initEdit })
 
 ### 主页面模板
 
+> **根节点规则（MANDATORY）**：`<template>` 的直接子元素有且仅有一个 `<div class="模块名-kebab-case">`，所有组件必须包裹在其内部。禁止多根节点。
+
 ```vue
 <!-- index.vue -->
 <script setup lang="ts">
@@ -647,6 +649,7 @@ const handleDel = async (row: XxxListItemModel) => {
 onMounted(loadList)
 </script>
 
+<!-- MANDATORY: 根节点必须是单个 div，class 为模块名 kebab-case -->
 <template>
   <div class="xxx-manage">
     <GXPaginationTable
@@ -675,6 +678,7 @@ onMounted(loadList)
         <ElButton type="primary" @click="handleAdd">新增</ElButton>
       </template>
     </GXPaginationTable>
+    <!-- 弹窗组件也必须在根 div 内部 -->
     <XxxAdd ref="XxxAddRef" @submitted="reloadList" />
   </div>
 </template>

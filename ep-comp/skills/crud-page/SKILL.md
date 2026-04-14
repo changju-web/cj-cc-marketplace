@@ -408,12 +408,36 @@ const [list, { page, loading, loadList, reloadList, onChange }] = useTablePage((
 
 - `defineOptions({ name: 'XxxManage' })` 设置组件名称
 - `defineAsyncComponent` 异步加载弹窗组件
-- 模板根节点为 `<div class="模块名-kebab-case">`
+- **模板必须有且仅有一个根节点 `<div class="模块名-kebab-case">`，所有内容（GXPaginationTable、弹窗组件等）必须包裹在该 div 内部**
 - `GXSearch` 使用 `v-model="search"` 绑定
 - 操作列通过 `#action` slot 渲染（见段落 4）
 - 新增按钮通过 `#action-bar` slot 渲染
 - 弹窗组件使用 `useCompRef` 获取引用
 - 弹窗的 `@submitted` 事件触发 `reloadList()`
+
+### MANDATORY — 根节点结构
+
+正确：
+
+```vue
+<template>
+  <div class="模块名-kebab-case">
+    <GXPaginationTable ...>...</GXPaginationTable>
+    <XxxAdd ref="XxxAddRef" @submitted="reloadList" />
+  </div>
+</template>
+```
+
+错误（禁止）：
+
+```vue
+<template>
+  <GXPaginationTable ...>...</GXPaginationTable>
+  <XxxAdd ref="XxxAddRef" @submitted="reloadList" />
+</template>
+```
+
+> **绝对禁止**输出无根节点的多根节点模板。弹窗组件（Add/Edit Dialog）与 GXPaginationTable 是兄弟节点，必须统一包裹在根 `<div>` 内。
 
 ## 7. 类型导出
 
@@ -673,7 +697,7 @@ export type ResPage<T> = Res<{
 - Model 包含 QueryModel、ListItemModel、FormModel 三个模型，所有字段含块注释
 - API 包含 loadPage、add、update、removeById 四个接口
 - 弹窗组件使用 ElDialog + try/catch/finally + loading 状态
-- 主页面模板单根节点 `<div class=”模块名”>`，defineAsyncComponent 加载弹窗
+- 主页面模板有且仅有一个根节点 `<div class=”模块名-kebab-case”>`，GXPaginationTable 和弹窗组件等全部内容包裹在其内部（**无例外，无省略**），defineAsyncComponent 加载弹窗
 - 推断项明确标注”需人工确认”
 - 用户补充模块名或目录结构后，可继续生成落地代码
 
