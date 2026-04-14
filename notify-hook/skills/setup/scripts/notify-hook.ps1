@@ -25,7 +25,7 @@ using System;
 using System.Runtime.InteropServices;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct FLASHWINFO {
+public class FLASHWINFO {
     public uint cbSize;
     public IntPtr hwnd;
     public uint dwFlags;
@@ -35,7 +35,8 @@ public struct FLASHWINFO {
 
 public class NotifyHelper {
     [DllImport("user32.dll")]
-    public static extern bool FlashWindowEx(ref FLASHWINFO pfwi);
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool FlashWindowEx(FLASHWINFO pfwi);
 
     [DllImport("kernel32.dll")]
     public static extern IntPtr GetConsoleWindow();
@@ -91,11 +92,11 @@ Write-Log "Found HWND=$($targetHwnd.ToInt64()) via $strategy"
 # Flash taskbar button continuously until window comes to foreground
 # FLASHW_TRAY (2) | FLASHW_TIMERNOFG (12) = 14
 $fw = New-Object FLASHWINFO
-$fw.cbSize = [System.Runtime.InteropServices.Marshal]::SizeOf([FLASHWINFO])
+$fw.cbSize = [System.Runtime.InteropServices.Marshal]::SizeOf($fw)
 $fw.hwnd = $targetHwnd
 $fw.dwFlags = 14
 $fw.uCount = 0
 $fw.dwTimeout = 0
 
-$result = [NotifyHelper]::FlashWindowEx([ref]$fw)
+$result = [NotifyHelper]::FlashWindowEx($fw)
 Write-Log "FlashWindowEx result: $result"
