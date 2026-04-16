@@ -1,0 +1,6 @@
+{
+  "eval_id": 2,
+  "eval_name": "data-export",
+  "prompt": "帮我加个数据导出功能，要支持导出 Excel 和 PDF。表格用的是 ep-comp 的分页列表组件，数据量大概几万条。后端已经有 /api/export 接口了，只需要前端对接。项目里已经有 openspec 了。",
+  "assertions": []
+}

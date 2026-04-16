@@ -1,0 +1,6 @@
+{
+  "eval_id": 3,
+  "eval_name": "message-notification",
+  "prompt": "我想给系统加个站内消息通知模块，用户登录后能看到未读消息，点击消息可以跳转到对应业务页面。先帮我想想怎么做比较好。",
+  "assertions": []
+}

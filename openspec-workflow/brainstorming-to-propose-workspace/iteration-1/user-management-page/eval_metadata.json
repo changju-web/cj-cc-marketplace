@@ -1,0 +1,6 @@
+{
+  "eval_id": 1,
+  "eval_name": "user-management-page",
+  "prompt": "我需要做一个用户管理页面，可以查看用户列表、搜索用户、禁用/启用用户账号。项目已经用了 Vue 3 + Element Plus + TypeScript，后端接口用的是 RESTful 风格。你帮我理一下需求然后开始做吧。",
+  "assertions": []
+}

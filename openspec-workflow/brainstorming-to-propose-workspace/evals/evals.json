@@ -1,0 +1,23 @@
+{
+  "skill_name": "brainstorming-to-propose",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "我需要做一个用户管理页面，可以查看用户列表、搜索用户、禁用/启用用户账号。项目已经用了 Vue 3 + Element Plus + TypeScript，后端接口用的是 RESTful 风格。你帮我理一下需求然后开始做吧。",
+      "expected_output": "应该触发 brainstorming-to-propose skill，先进行需求澄清（比如是否需要角色管理、批量操作等），收敛方案后展示硬确认门提示，用户确认后整理结构化摘要并调用 /opsx:propose 创建 proposal.md、spec.md、design.md、tasks.md 四件套",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "帮我加个数据导出功能，要支持导出 Excel 和 PDF。表格用的是 ep-comp 的分页列表组件，数据量大概几万条。后端已经有 /api/export 接口了，只需要前端对接。项目里已经有 openspec 了。",
+      "expected_output": "应该触发 brainstorming-to-propose skill，澄清需求边界（如分页导出还是全量导出、进度提示、大文件处理等），收敛后展示硬确认门，确认后整理摘要进入 /opsx:propose，生成四件套",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "我想给系统加个站内消息通知模块，用户登录后能看到未读消息，点击消息可以跳转到对应业务页面。先帮我想想怎么做比较好。",
+      "expected_output": "应该触发 brainstorming-to-propose skill，先探讨技术方案（WebSocket vs 轮询、消息已读机制、消息分类等），比较方案后给出推荐，展示硬确认门，确认后整理摘要进入 /opsx:propose",
+      "files": []
+    }
+  ]
+}

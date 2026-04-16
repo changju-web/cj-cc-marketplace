@@ -1,0 +1,60 @@
+{
+  "eval_id": "all",
+  "grading_time": "2026-04-16",
+  "results": {
+    "user-management-page": {
+      "with_skill": {
+        "assertion_1_brainstorming_triggered": { "text": "是否先提问澄清需求而不是直接写代码", "passed": true, "evidence": "阶段1列出了4个澄清问题（搜索维度、操作交互、其他能力、数据权限），通过选择题引导用户收敛" },
+        "assertion_2_confirmation_gate": { "text": "是否展示了硬确认门提示", "passed": true, "evidence": "明确输出了'需求探索阶段完成'确认提示，包含目标、范围、推荐方案、核心约束四个字段" },
+        "assertion_3_structured_summary": { "text": "是否整理了结构化摘要（change-name/proposal/spec/design/tasks）", "passed": true, "evidence": "阶段2输出了完整的 change-name、proposal、spec、design、tasks 五项" },
+        "assertion_4_no_superpowers_specs": { "text": "是否没有写入 docs/superpowers/specs/*", "passed": true, "evidence": "全程未出现 docs/superpowers/specs 路径" },
+        "assertion_5_mentions_opsx_propose": { "text": "是否提及 /opsx:propose 作为下一步", "passed": true, "evidence": "确认门和阶段3都明确提到进入 /opsx:propose" },
+        "assertion_6_includes_spec_md": { "text": "产出是否包含 spec.md（行为规格）", "passed": true, "evidence": "spec 内容包含：列表展示、搜索条件、二次确认、批量操作、异常处理、空状态" }
+      },
+      "without_skill": {
+        "assertion_1_brainstorming_triggered": { "text": "是否先提问澄清需求而不是直接写代码", "passed": false, "evidence": "直接列出了功能清单、技术方案和代码片段，没有先问问题" },
+        "assertion_2_confirmation_gate": { "text": "是否展示了硬确认门提示", "passed": false, "evidence": "无确认门，直接给出了方案并问'需要我开始写代码吗'" },
+        "assertion_3_structured_summary": { "text": "是否整理了结构化摘要", "passed": false, "evidence": "没有结构化摘要，直接给出了目录结构和代码" },
+        "assertion_4_no_superpowers_specs": { "text": "是否没有写入 docs/superpowers/specs/*", "passed": true, "evidence": "未出现该路径（但也未走 brainstorming 流程）" },
+        "assertion_5_mentions_opsx_propose": { "text": "是否提及 /opsx:propose 作为下一步", "passed": false, "evidence": "未提及 /opsx:propose 或 OpenSpec 流程" },
+        "assertion_6_includes_spec_md": { "text": "产出是否包含 spec.md（行为规格）", "passed": false, "evidence": "无行为规格，只有功能清单和代码" }
+      }
+    },
+    "data-export": {
+      "with_skill": {
+        "assertion_1_brainstorming_triggered": { "text": "是否先提问澄清需求而不是直接写代码", "passed": true, "evidence": "列出了5个澄清问题：数据范围、触发方式、大文件体验、按钮位置、文件名规则" },
+        "assertion_2_confirmation_gate": { "text": "是否展示了硬确认门提示", "passed": true, "evidence": "输出了完整的确认门提示，包含目标、范围、推荐方案、核心约束" },
+        "assertion_3_structured_summary": { "text": "是否整理了结构化摘要", "passed": true, "evidence": "阶段2输出了完整的 change-name、proposal、spec、design、tasks" },
+        "assertion_4_no_superpowers_specs": { "text": "是否没有写入 docs/superpowers/specs/*", "passed": true, "evidence": "全程未出现 docs/superpowers/specs 路径" },
+        "assertion_5_mentions_opsx_propose": { "text": "是否提及 /opsx:propose 作为下一步", "passed": true, "evidence": "确认门和阶段3明确提到 /opsx:propose" },
+        "assertion_6_includes_spec_md": { "text": "产出是否包含 spec.md（行为规格）", "passed": true, "evidence": "spec 包含：按钮展示、参数传递、loading、下载触发、文件名、异常、空数据" }
+      },
+      "without_skill": {
+        "assertion_1_brainstorming_triggered": { "text": "是否先提问澄清需求而不是直接写代码", "passed": false, "evidence": "直接给出了代码方案和实现细节，没有先问问题" },
+        "assertion_2_confirmation_gate": { "text": "是否展示了硬确认门提示", "passed": false, "evidence": "无确认门" },
+        "assertion_3_structured_summary": { "text": "是否整理了结构化摘要", "passed": false, "evidence": "无结构化摘要" },
+        "assertion_4_no_superpowers_specs": { "text": "是否没有写入 docs/superpowers/specs/*", "passed": true, "evidence": "未出现该路径" },
+        "assertion_5_mentions_opsx_propose": { "text": "是否提及 /opsx:propose 作为下一步", "passed": false, "evidence": "未提及 OpenSpec 流程" },
+        "assertion_6_includes_spec_md": { "text": "产出是否包含 spec.md（行为规格）", "passed": false, "evidence": "无行为规格" }
+      }
+    },
+    "message-notification": {
+      "with_skill": {
+        "assertion_1_brainstorming_triggered": { "text": "是否先提问澄清需求而不是直接写代码", "passed": true, "evidence": "列出了5个核心决策点：实时性、展示方式、消息类型、管理能力、提醒方式" },
+        "assertion_2_confirmation_gate": { "text": "是否展示了硬确认门提示", "passed": true, "evidence": "输出了确认门，并额外做了方案比较表格（WebSocket vs 短轮询 vs SSE）" },
+        "assertion_3_structured_summary": { "text": "是否整理了结构化摘要", "passed": true, "evidence": "阶段2输出了完整的五项结构化摘要" },
+        "assertion_4_no_superpowers_specs": { "text": "是否没有写入 docs/superpowers/specs/*", "passed": true, "evidence": "全程未出现 docs/superpowers/specs" },
+        "assertion_5_mentions_opsx_propose": { "text": "是否提及 /opsx:propose 作为下一步", "passed": true, "evidence": "确认门和阶段3明确提到" },
+        "assertion_6_includes_spec_md": { "text": "产出是否包含 spec.md（行为规格）", "passed": true, "evidence": "spec 包含：badge、下拉面板、消息中心、已读标记、跳转逻辑、轮询控制等10条行为规格" }
+      },
+      "without_skill": {
+        "assertion_1_brainstorming_triggered": { "text": "是否先提问澄清需求而不是直接写代码", "passed": false, "evidence": "直接给出了方案建议和代码实现，没有先问用户" },
+        "assertion_2_confirmation_gate": { "text": "是否展示了硬确认门提示", "passed": false, "evidence": "无确认门" },
+        "assertion_3_structured_summary": { "text": "是否整理了结构化摘要", "passed": false, "evidence": "无结构化摘要" },
+        "assertion_4_no_superpowers_specs": { "text": "是否没有写入 docs/superpowers/specs/*", "passed": true, "evidence": "未出现该路径" },
+        "assertion_5_mentions_opsx_propose": { "text": "是否提及 /opsx:propose 作为下一步", "passed": false, "evidence": "未提及" },
+        "assertion_6_includes_spec_md": { "text": "产出是否包含 spec.md（行为规格）", "passed": false, "evidence": "无行为规格" }
+      }
+    }
+  }
+}
