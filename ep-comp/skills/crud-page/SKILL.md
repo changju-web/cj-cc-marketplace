@@ -404,6 +404,15 @@ const [list, { page, loading, loadList, reloadList, onChange }] = useTablePage((
 
 生成完整 `index.vue`，集成搜索、表格、操作列和弹窗组件。
 
+### MANDATORY OUTPUT INVARIANTS
+
+在输出任何 `index.vue` 之前，必须先检查以下不变量：
+
+1. **根节点不变量**：`<template>` 的直接子元素有且仅有一个 `<div class="模块名-kebab-case">`
+2. `GXPaginationTable`、弹窗组件、以及其他兄弟内容都必须包裹在这个根 `<div>` 内
+3. 如果 `GXPaginationTable` 与任意弹窗组件在 `<template>` 下成为兄弟节点，则判定为**错误输出**，必须重写
+4. 该规则是**硬约束**，优先级高于常见 Vue 页面习惯写法，不允许省略
+
 关键规范：
 
 - `defineOptions({ name: 'XxxManage' })` 设置组件名称
@@ -438,6 +447,17 @@ const [list, { page, loading, loadList, reloadList, onChange }] = useTablePage((
 ```
 
 > **绝对禁止**输出无根节点的多根节点模板。弹窗组件（Add/Edit Dialog）与 GXPaginationTable 是兄弟节点，必须统一包裹在根 `<div>` 内。
+
+### Final Output Checklist
+
+输出 `index.vue` 前，逐项确认：
+
+- [ ] `<template>` 只有一个直接子节点
+- [ ] 该直接子节点是 `<div class="模块名-kebab-case">`
+- [ ] `GXPaginationTable` 在该根节点内
+- [ ] 所有弹窗 / 异步组件在该根节点内
+- [ ] 没有把 `GXPaginationTable` 和弹窗组件并列放在 `<template>` 下
+- [ ] 如果发现双根节点结构，已重写而不是保留
 
 ## 7. 类型导出
 

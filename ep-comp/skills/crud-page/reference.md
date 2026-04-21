@@ -585,6 +585,11 @@ defineExpose({ init, initEdit })
 ### 主页面模板
 
 > **根节点规则（MANDATORY）**：`<template>` 的直接子元素有且仅有一个 `<div class="模块名-kebab-case">`，所有组件必须包裹在其内部。禁止多根节点。
+>
+> **输出前不变量（必须先检查）**：
+> 1. `GXPaginationTable` 与任意弹窗组件不能直接并列出现在 `<template>` 下
+> 2. 如果出现双根节点，说明模板不合格，必须重写
+> 3. 该规则是硬约束，不因项目现有写法而放宽
 
 ```vue
 <!-- index.vue -->
