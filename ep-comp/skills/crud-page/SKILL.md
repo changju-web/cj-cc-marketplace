@@ -1,6 +1,6 @@
 ---
 name: crud-page
-description: Generate ep-comp CRUD page scaffolds from Swagger, Knife4j, OpenAPI JSON, or request/response examples. Use this whenever the user wants to turn API docs into `generateTableColumns`, `generateFormItems`, `useTablePage`, `GXForm`, `GXPaginationTable`, and CRUD dialog components based pages, even if they only say "根据 Swagger 生成列表页". If the context clearly points to an `@gx-web/ep-comp` page, use this skill proactively.
+description: Generate ep-comp CRUD page scaffolds from Swagger, Knife4j, OpenAPI JSON, or request/response examples. Use this whenever the user wants to turn API docs into `generateTableColumns`, `generateFormItems`, `useTablePage`, `GxForm`, `GxPaginationTable`, and CRUD dialog components based pages, even if they only say "根据 Swagger 生成列表页". If the context clearly points to an `@gx-web/ep-comp` page, use this skill proactively.
 ---
 
 # ep-comp Swagger CRUD 页面生成
@@ -14,8 +14,8 @@ description: Generate ep-comp CRUD page scaffolds from Swagger, Knife4j, OpenAPI
 - `generateTableColumns`
 - `generateFormItems`
 - `useTablePage`
-- `GXForm`
-- `GXPaginationTable`
+- `GxForm`
+- `GxPaginationTable`
 - 新增/编辑弹窗组件（`ElDialog` + 表单验证 + `defineExpose`）
 - 完整 CRUD API（查询/新增/编辑/删除）
 
@@ -41,7 +41,7 @@ description: Generate ep-comp CRUD page scaffolds from Swagger, Knife4j, OpenAPI
 以下场景不应触发这个 skill：
 
 - 用户只问 `generateTableColumns` 的单独用法
-- 用户只问 `GXForm` 或 `GXPaginationTable` 的 props
+- 用户只问 `GxForm` 或 `GxPaginationTable` 的 props
 - 用户给的是接口文档，但目标不是 `ep-comp` 体系
 - 用户仅想阅读 Swagger 文档，不需要生成页面骨架
 - 用户要做的是纯详情页（无 CRUD 操作），而非列表 CRUD 页面
@@ -329,9 +329,15 @@ const [list, { page, loading, loadList, reloadList, onChange }] = useTablePage((
 至少生成：
 
 - `generateFormItems(...)`
-- `GXForm` 示例
+- `GxForm` 示例
 - 查询模型默认值
 - 查询与重置的基本交互说明
+
+默认按以下层级组织示例，避免一上来就输出复杂自定义：
+
+1. 基础版：`generateFormItems + GxSearch` 完成标准查询表单
+2. slot 版：当搜索项需要模板化自定义时，补 `#form-item-字段名`
+3. render 版：当单个表单项更适合函数式组合时，补 `generateFormItems.render`
 
 ## 4. 表格分页 + 操作列
 
@@ -339,7 +345,7 @@ const [list, { page, loading, loadList, reloadList, onChange }] = useTablePage((
 
 - `generateTableColumns(...)` — 只配置数据列，不包含操作列
 - `useTablePage(...)`
-- `GXPaginationTable` 示例
+- `GxPaginationTable` 示例
 - `loading`、`page`、`total`、`onChange` 的联动方式
 - 操作列（编辑/删除按钮）
 
@@ -348,16 +354,38 @@ const [list, { page, loading, loadList, reloadList, onChange }] = useTablePage((
 - 使用 `generateTableColumns`
 - 使用 `generateFormItems`
 - 使用 `useTablePage`
-- 使用 `GXForm`
-- 使用 `GXPaginationTable`
+- 使用 `GxForm`
+- 使用 `GxPaginationTable`
 - 不回退到已移除的 `getEPTableColumns`
 
 操作列规则：
 
-- **统一通过 `GXPaginationTable` 的 `#action` slot 渲染**，不在 `generateTableColumns` 中使用 render 配置
+- **统一通过 `GxPaginationTable` 的 `#action` slot 渲染**，不在 `generateTableColumns` 中使用 render 配置
 - 编辑按钮：`<ElButton link type="primary">`，调用弹窗组件的 `initEdit(row)` 方法
 - 删除按钮：使用 `<ElPopconfirm title="是否删除?" placement="left">` 二次确认
 - 删除操作使用 try/catch 错误处理
+
+其他展示与查询自定义规则：
+
+- 普通数据列默认优先使用 `generateTableColumns` 的基础字段配置
+- 单列轻定制：用 `#table-column-字段名` 或 `generateTableColumns.render`
+- 查询项 / 表单项定制：用 `#form-item-字段名` 或 `generateFormItems.render`
+- 局部展示替换：优先更直观的写法，必要时补另一种
+- 如果表格整体结构差异较大，再使用 `GxPaginationTable` 的 `#default` 接管整个表格区域
+- 操作列仍然优先 `#action` slot，不要改成 render
+
+推荐示例层级：
+
+1. 基础版：`columns + #action + #action-bar`
+2. slot 版：补 `#table-column-字段名`、`#form-item-字段名`、`#footer`
+3. render 版：补 `generateTableColumns.render`、`generateFormItems.render`
+4. 整表版：仅在结构差异明显时补 `#default`
+
+render / slot 判断原则：
+
+- 字段级展示：优先 `render`
+- 模板级展示：优先具名 slot
+- 重业务逻辑：下沉到方法、组合式函数或子组件
 
 操作列 slot 模板：
 
@@ -389,7 +417,7 @@ const [list, { page, loading, loadList, reloadList, onChange }] = useTablePage((
 
 表单生成策略（混合模式）：
 
-1. 简单字段（input、select、textarea）：使用 `generateFormItems` + `GXForm` 自动生成
+1. 简单字段（input、select、textarea）：使用 `generateFormItems` + `GxForm` 自动生成
 2. 复杂字段（树选择器、上传、自定义组件）：手动 `ElFormItem`
 3. 在输出中明确标注哪些是自动生成、哪些需要手动补充
 
@@ -409,19 +437,24 @@ const [list, { page, loading, loadList, reloadList, onChange }] = useTablePage((
 在输出任何 `index.vue` 之前，必须先检查以下不变量：
 
 1. **根节点不变量**：`<template>` 的直接子元素有且仅有一个 `<div class="模块名-kebab-case">`
-2. `GXPaginationTable`、弹窗组件、以及其他兄弟内容都必须包裹在这个根 `<div>` 内
-3. 如果 `GXPaginationTable` 与任意弹窗组件在 `<template>` 下成为兄弟节点，则判定为**错误输出**，必须重写
+2. `GxPaginationTable`、弹窗组件、以及其他兄弟内容都必须包裹在这个根 `<div>` 内
+3. 如果 `GxPaginationTable` 与任意弹窗组件在 `<template>` 下成为兄弟节点，则判定为**错误输出**，必须重写
 4. 该规则是**硬约束**，优先级高于常见 Vue 页面习惯写法，不允许省略
 
 关键规范：
 
 - `defineOptions({ name: 'XxxManage' })` 设置组件名称
 - `defineAsyncComponent` 异步加载弹窗组件
-- **模板必须有且仅有一个根节点 `<div class="模块名-kebab-case">`，所有内容（GXPaginationTable、弹窗组件等）必须包裹在该 div 内部**
-- `GXSearch` 使用 `v-model="search"` 绑定
+- **模板必须有且仅有一个根节点 `<div class="模块名-kebab-case">`，所有内容（GxPaginationTable、弹窗组件等）必须包裹在该 div 内部**
+- `GxSearch` 使用 `v-model="search"` 绑定
 - 操作列通过 `#action` slot 渲染（见段落 4）
 - 新增按钮通过 `#action-bar` slot 渲染
-- 弹窗组件使用 `useCompRef` 获取引用
+- 高级搜索项：补 `#form-item-字段名` 或 `generateFormItems.render`
+- 单列展示定制：补 `#table-column-字段名` 或 `generateTableColumns.render`
+- 整表结构重写：用 `GxPaginationTable` 的 `#default`
+- 弹窗组件使用 `useTemplateRef` 获取组件 / 表单实例引用
+- 组件 ref：`useTemplateRef<ComponentExposed<typeof XxxAdd>>('XxxAddRef')`
+- 表单 ref：`useTemplateRef<FormInstance>('FormRef')`
 - 弹窗的 `@submitted` 事件触发 `reloadList()`
 
 ### MANDATORY — 根节点结构
@@ -431,7 +464,7 @@ const [list, { page, loading, loadList, reloadList, onChange }] = useTablePage((
 ```vue
 <template>
   <div class="模块名-kebab-case">
-    <GXPaginationTable ...>...</GXPaginationTable>
+    <GxPaginationTable ...>...</GxPaginationTable>
     <XxxAdd ref="XxxAddRef" @submitted="reloadList" />
   </div>
 </template>
@@ -441,12 +474,12 @@ const [list, { page, loading, loadList, reloadList, onChange }] = useTablePage((
 
 ```vue
 <template>
-  <GXPaginationTable ...>...</GXPaginationTable>
+  <GxPaginationTable ...>...</GxPaginationTable>
   <XxxAdd ref="XxxAddRef" @submitted="reloadList" />
 </template>
 ```
 
-> **绝对禁止**输出无根节点的多根节点模板。弹窗组件（Add/Edit Dialog）与 GXPaginationTable 是兄弟节点，必须统一包裹在根 `<div>` 内。
+> **绝对禁止**输出无根节点的多根节点模板。弹窗组件（Add/Edit Dialog）与 GxPaginationTable 是兄弟节点，必须统一包裹在根 `<div>` 内。
 
 ### Final Output Checklist
 
@@ -454,9 +487,9 @@ const [list, { page, loading, loadList, reloadList, onChange }] = useTablePage((
 
 - [ ] `<template>` 只有一个直接子节点
 - [ ] 该直接子节点是 `<div class="模块名-kebab-case">`
-- [ ] `GXPaginationTable` 在该根节点内
+- [ ] `GxPaginationTable` 在该根节点内
 - [ ] 所有弹窗 / 异步组件在该根节点内
-- [ ] 没有把 `GXPaginationTable` 和弹窗组件并列放在 `<template>` 下
+- [ ] 没有把 `GxPaginationTable` 和弹窗组件并列放在 `<template>` 下
 - [ ] 如果发现双根节点结构，已重写而不是保留
 
 ## 7. 类型导出
@@ -568,6 +601,7 @@ const [list, { page, loading, loadList, reloadList, onChange }] = useTablePage((
 - 可以保留列
 - 但不要默认补复杂 `render`
 - 要提醒用户确认展示格式或是否需要自定义渲染
+- 如需自定义渲染，可按场景补 `#table-column-字段名` slot 或 `generateTableColumns.render` 两种方案，而不是固定只给一种
 
 ## Response Structure Convention
 
@@ -706,7 +740,7 @@ export type ResPage<T> = Res<{
 
 > 根据这个接口生成查询条件和分页表格
 
-也应优先按 `generateFormItems + GXForm + generateTableColumns + useTablePage + GXPaginationTable` 的主链路来组织答案。
+也应优先按 `generateFormItems + GxForm + generateTableColumns + useTablePage + GxPaginationTable` 的主链路来组织答案。
 
 ## Success Criteria
 
@@ -717,7 +751,7 @@ export type ResPage<T> = Res<{
 - Model 包含 QueryModel、ListItemModel、FormModel 三个模型，所有字段含块注释
 - API 包含 loadPage、add、update、removeById 四个接口
 - 弹窗组件使用 ElDialog + try/catch/finally + loading 状态
-- 主页面模板有且仅有一个根节点 `<div class=”模块名-kebab-case”>`，GXPaginationTable 和弹窗组件等全部内容包裹在其内部（**无例外，无省略**），defineAsyncComponent 加载弹窗
+- 主页面模板有且仅有一个根节点 `<div class=”模块名-kebab-case”>`，GxPaginationTable 和弹窗组件等全部内容包裹在其内部（**无例外，无省略**），defineAsyncComponent 加载弹窗
 - 推断项明确标注”需人工确认”
 - 用户补充模块名或目录结构后，可继续生成落地代码
 
@@ -728,7 +762,9 @@ export type ResPage<T> = Res<{
 reference.md 包含以下内容：
 
 - `@gx-web/core`：`@FieldName`、`getModelFromJson`、`getModelFieldName`
-- `@gx-web/tool`：`useTablePage`、`useStateRef`、`useCompRef`、`useToggle`
-- `@gx-web/ep-comp`：`generateTableColumns`、`generateFormItems`、`GXPaginationTable`、`GXForm`、`GXSearch`、`useComponentMap`
-- 所有类型定义：`EPTableColumnConfigType`、`EPFormItemConfigType`、`GXFormProps`、`GXPaginationTableProps`
+- `@gx-web/tool`：`useTablePage`、`useStateRef`、`useToggle`
+- `vue`：`useTemplateRef`
+- `vue-component-type-helpers`：`ComponentExposed`
+- `@gx-web/ep-comp`：`generateTableColumns`、`generateFormItems`、`GxPaginationTable`、`GxForm`、`GxSearch`、`useComponentMap`
+- 所有类型定义：`EPTableColumnConfigType`、`EPFormItemConfigType`、`GxFormProps`、`GxPaginationTableProps`
 - 完整 CRUD 页面模板（index.vue + model + api + dialog component）

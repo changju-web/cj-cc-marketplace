@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { computed, reactive } from 'vue'
-import type { FormRules } from 'element-plus'
-import { ElMessage } from 'element-plus'
-import { useCompRef, useStateRef, useToggle } from '@gx-web/tool'
+import { computed, h, reactive, useTemplateRef } from 'vue'
+import type { FormInstance, FormRules } from 'element-plus'
+import { ElButton, ElInput, ElMessage } from 'element-plus'
+import { useStateRef, useToggle } from '@gx-web/tool'
 import { getModelFromJson } from '@gx-web/core'
-import { generateFormItems, GXForm } from '@gx-web/ep-comp'
+import { generateFormItems, GxForm } from '@gx-web/ep-comp'
 import { add, update } from '../api'
 import type { AlarmVO } from '../model'
 import { AlarmFormModel } from '../model'
@@ -32,14 +32,30 @@ const rules = reactive<FormRules>({
 
 const dialogTitle = computed(() => `${isEdit.value ? '编辑' : '新增'}告警`)
 
-// 简单字段自动生成
 const formItems = generateFormItems(AlarmFormModel, [
   'alarmCode',
   'alarmTitle',
-  'alarmDetail'
+  {
+    prop: 'alarmDetail',
+    label: '告警详情',
+    render: form => h('div', { style: 'display:flex;gap:8px;width:100%;' }, [
+      h(ElInput, {
+        modelValue: form.alarmDetail,
+        'onUpdate:modelValue': (value: string) => {
+          form.alarmDetail = value
+        },
+        placeholder: '请输入告警详情'
+      }),
+      h(ElButton, {
+        onClick: () => {
+          form.alarmDetail = form.alarmDetail?.trim?.() || ''
+        }
+      }, () => '去空格')
+    ])
+  }
 ])
 
-const FormRef = useCompRef<typeof import('element-plus')['ElForm']>()
+const FormRef = useTemplateRef<FormInstance>('FormRef')
 
 /** 新增模式 */
 const init = () => {
@@ -82,7 +98,7 @@ defineExpose({ init, initEdit })
 <template>
   <ElDialog v-model="visible" :title="dialogTitle" width="500px" @closed="close">
     <ElForm ref="FormRef" v-loading="loading" :model="form" :rules="rules" label-width="120px">
-      <GXForm :items="formItems" :form="form" />
+      <GxForm :items="formItems" :form="form" />
     </ElForm>
     <template #footer>
       <ElButton :loading="loading" @click="setVisible(false)">取消</ElButton>

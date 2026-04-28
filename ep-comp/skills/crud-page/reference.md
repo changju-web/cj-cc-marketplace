@@ -128,35 +128,36 @@ function useStateRef<T extends AnyObject>(createState: () => T): [
 const [search, , resetSearch] = useStateRef(() => getModelFromJson(AlarmVO))
 ```
 
-### useCompRef
+### useTemplateRef
 
-用于获取子组件 ref,配合 `defineExpose` 使用。
+用于获取模板 ref。自定义组件场景可配合 `defineExpose` 使用。
 
-**签名：**
+**自定义组件示例：**
 
 ```ts
-function useCompRef<T extends abstract new (...args: any) => any>(
-  component: T
-): Ref<InstanceType<T> | undefined>
+import { useTemplateRef } from 'vue'
+import type { ComponentExposed } from 'vue-component-type-helpers'
+import XxxAdd from './components/xxx-add.vue'
+
+const XxxAddRef = useTemplateRef<ComponentExposed<typeof XxxAdd>>('XxxAddRef')
+XxxAddRef.value?.init()
 ```
 
-**使用示例：**
+**Element Plus 表单示例：**
 
 ```ts
-// 引用自定义组件
-import XxxAdd from './components/xxx-add.vue'
-const XxxAddRef = useCompRef(XxxAdd)
-XxxAddRef.value?.init()
+import { useTemplateRef } from 'vue'
+import type { FormInstance } from 'element-plus'
 
-// 引用 Element Plus 组件
-const FormRef = useCompRef<typeof import('element-plus')['ElForm']>()
+const FormRef = useTemplateRef<FormInstance>('FormRef')
 await FormRef.value?.validate()
 ```
 
 **要点：**
 
-- 对于自定义组件,传入组件本身（非字符串）,返回类型自动推断 `defineExpose` 暴露的方法
-- 对于 Element Plus 内置组件,使用 `typeof import('element-plus')['ElXxx']` 获取类型
+- 自定义组件 ref 名称需与模板 `ref="..."` 保持一致
+- 自定义组件暴露方法时，优先使用 `ComponentExposed<typeof XxxComp>` 获取类型
+- Element Plus 内置组件优先直接使用其实例类型，例如 `FormInstance`
 
 ### useToggle
 
@@ -190,6 +191,8 @@ setLoading(false)  // 结束加载
 
 根据 Model 类和字段配置生成表格列配置。
 
+**基础版：**
+
 **签名：**
 
 ```ts
@@ -215,9 +218,40 @@ const columns = generateTableColumns(AlarmVO, [
 ])
 ```
 
+**render 版：**
+
+```ts
+import { h } from 'vue'
+import { ElTag } from 'element-plus'
+
+const columns = generateTableColumns(AlarmVO, [
+  'deviceSn',
+  {
+    prop: 'alarmCode',
+    label: '告警代码',
+    minWidth: 160,
+    render: ({ row }) => h(
+      ElTag,
+      { type: row.alarmCode ? 'danger' : 'info' },
+      () => row.alarmCode || '未配置'
+    )
+  },
+  {
+    prop: 'alarmTime',
+    label: '告警时间',
+    minWidth: 180,
+    render: ({ row }) => h('span', row.alarmTime || '--')
+  }
+])
+```
+
+> 字段级展示用 `render`；操作列仍用 `#action`。
+
 ### generateFormItems
 
 根据 Model 类和字段配置生成表单项配置。未指定 `type` 时默认为 `'input'`。
+
+**基础版：**
 
 **签名：**
 
@@ -237,6 +271,37 @@ const searchItems = generateFormItems(AlarmVO, [
   { prop: 'alarmTime', type: 'input', props: { type: 'datetime' } } // 带属性
 ])
 ```
+
+**render 版：**
+
+```ts
+import { h } from 'vue'
+import { ElButton, ElInput } from 'element-plus'
+
+const formItems = generateFormItems(AlarmFormModel, [
+  'alarmCode',
+  {
+    prop: 'alarmDetail',
+    label: '告警详情',
+    render: form => h('div', { style: 'display:flex;gap:8px;width:100%;' }, [
+      h(ElInput, {
+        modelValue: form.alarmDetail,
+        'onUpdate:modelValue': (value: string) => {
+          form.alarmDetail = value
+        },
+        placeholder: '请输入告警详情'
+      }),
+      h(ElButton, {
+        onClick: () => {
+          form.alarmDetail = form.alarmDetail?.trim?.() || ''
+        }
+      }, () => '去空格')
+    ])
+  }
+])
+```
+
+> 单项复合控件用 `render`；模板化展示用 `#form-item-xxx`。
 
 ---
 
@@ -295,20 +360,20 @@ interface EPFormItemConfigType<T extends NoArgConstructor> {
 
 ## 5. @gx-web/ep-comp — 组件
 
-### GXPaginationTable
+### GxPaginationTable
 
 分页表格容器，集成表格 + 分页组件。
 
 **Props：**
 
 ```ts
-interface GXPaginationTableProps {
+interface GxPaginationTableProps {
   loading?: boolean          // 加载状态，默认 false
   data?: any[]               // 列表数据，默认 []
-  columns?: GXTableProps['columns']  // 表格列配置，默认 []
+  columns?: GxTableProps['columns']  // 表格列配置，默认 []
   total?: number             // 数据总条数，默认 0
   pagination?: boolean       // 是否显示分页，默认 true
-  tableProps?: Partial<GXTableProps> // 透传给 GXTable 的属性
+  tableProps?: Partial<GxTableProps> // 透传给 GxTable 的属性
 }
 ```
 
@@ -325,13 +390,15 @@ interface GXPaginationTableProps {
 
 - `header` — 搜索区/头部内容
 - `action-bar` — 操作栏
+- `action` — 操作列具名插槽，常用于编辑/删除/更多操作
+- `table-column-字段名` — 单列展示插槽，适合状态标签、字典翻译、局部交互
 - `default` — 默认插槽（替换整个表格区域）
 - `footer` — 底部内容
 
-**典型用法：**
+**基础版：**
 
 ```vue
-<GXPaginationTable
+<GxPaginationTable
   v-model:page="page.current"
   v-model:limit="page.size"
   :columns="columns"
@@ -341,21 +408,67 @@ interface GXPaginationTableProps {
   @pagination="onChange"
 >
   <template #header>
-    <GXSearch :items="searchItems" :form="search" @submit="loadList" @reset="resetSearch();reloadList()" />
+    <GxSearch v-model="search" :items="searchItems" @submit="loadList" @reset="resetSearch();reloadList()" />
   </template>
-</GXPaginationTable>
+
+  <template #action="{ row }">
+    <ElButton link type="primary" @click="handleEdit(row)">编辑</ElButton>
+  </template>
+</GxPaginationTable>
 ```
 
-> **注意**：`v-model:page` 绑定的是 `page.current`（页码数字），`v-model:limit` 绑定的是 `page.size`（每页条数数字），而不是直接绑定整个 `page` 对象。
+**slot 版：**
 
-### GXForm
+```vue
+<GxPaginationTable
+  v-model:page="page.current"
+  v-model:limit="page.size"
+  :columns="columns"
+  :data="list"
+  :loading="loading"
+  :total="page.total"
+  @pagination="onChange"
+>
+  <template #table-column-alarm-code="{ row }">
+    <ElTag :type="row.alarmCode ? 'danger' : 'info'">{{ row.alarmCode || '未配置' }}</ElTag>
+  </template>
+
+  <template #footer>
+    <div>当前页 {{ list.length }} 条，共 {{ page.total }} 条</div>
+  </template>
+</GxPaginationTable>
+```
+
+**整表版：**
+
+```vue
+<GxPaginationTable
+  v-model:page="page.current"
+  v-model:limit="page.size"
+  :data="list"
+  :loading="loading"
+  :total="page.total"
+  @pagination="onChange"
+>
+  <template #default>
+    <ElTable :data="list" border>
+      <ElTableColumn prop="deviceSn" label="设备SN" min-width="180" />
+      <ElTableColumn prop="alarmTitle" label="告警标题" min-width="180" />
+    </ElTable>
+  </template>
+</GxPaginationTable>
+```
+
+> 个别列定制用 `table-column-字段名` 或 `columns.render`；整表差异大时用 `#default`。
+
+### GxForm
 
 自动生成表单项的表单组件，基于 Element Plus ElForm。
 
-**Props（GXFormProps）：**
+**Props（GxFormProps）：**
 
 ```ts
-interface GXFormProps {
+interface GxFormProps {
   items?: EPFormItemConfigType<any>[]   // 表单项配置
   row?: RowConfigType                    // 栅格布局
   loading?: boolean                      // 加载状态
@@ -382,11 +495,11 @@ interface GXFormProps {
 - `submit` — 提交表单
 - `reset` — 重置表单
 
-### GXSearch
+### GxSearch
 
-搜索表单组件，基于 GXForm，默认开启 `inline` 模式，提交按钮文字默认为 `'查 询'`。
+搜索表单组件，基于 GxForm，默认开启 `inline` 模式，提交按钮文字默认为 `'查 询'`。
 
-**Props：** 同 `GXFormProps`
+**Props：** 同 `GxFormProps`
 
 **v-model：** 表单数据对象
 
@@ -394,6 +507,28 @@ interface GXFormProps {
 
 - `submit(form)` — 查询
 - `reset` — 重置
+
+**基础版：**
+
+```vue
+<GxSearch v-model="search" :items="searchItems" @submit="loadList" @reset="resetSearch();reloadList()" />
+```
+
+**slot 版：**
+
+```vue
+<GxSearch v-model="search" :items="searchItems" @submit="loadList" @reset="resetSearch();reloadList()">
+  <template #form-item-device-sn>
+    <ElInput v-model="search.deviceSn" clearable placeholder="请输入设备SN">
+      <template #append>
+        <ElButton @click="loadList">快速查询</ElButton>
+      </template>
+    </ElInput>
+  </template>
+</GxSearch>
+```
+
+> 查询项模板重写用 `form-item-字段名`；单项复合控件也可用 `generateFormItems.render`。
 
 ---
 
@@ -485,12 +620,12 @@ export const removeById = (id: string) => {
 ```vue
 <!-- components/xxx-add.vue -->
 <script setup lang="ts">
-import { computed, reactive } from 'vue'
-import type { FormRules } from 'element-plus'
+import { computed, reactive, useTemplateRef } from 'vue'
+import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage } from 'element-plus'
-import { useCompRef, useStateRef, useToggle } from '@gx-web/tool'
+import { useStateRef, useToggle } from '@gx-web/tool'
 import { getModelFromJson } from '@gx-web/core'
-import { generateFormItems, GXForm } from '@gx-web/ep-comp'
+import { generateFormItems, GxForm } from '@gx-web/ep-comp'
 import { add, update } from '../api'
 import type { XxxListItemModel } from '../model'
 import { XxxFormModel } from '../model'
@@ -523,7 +658,7 @@ const formItems = generateFormItems(XxxFormModel, [
   'field2'
 ])
 
-const FormRef = useCompRef<typeof import('element-plus')['ElForm']>()
+const FormRef = useTemplateRef<FormInstance>('FormRef')
 
 /** 新增模式 */
 const init = () => {
@@ -566,7 +701,7 @@ defineExpose({ init, initEdit })
 <template>
   <ElDialog v-model="visible" :title="dialogTitle" width="500px" @closed="close">
     <ElForm ref="FormRef" v-loading="loading" :model="form" :rules="rules" label-width="120px">
-      <GXForm :items="formItems" :form="form" />
+      <GxForm :items="formItems" :form="form" />
       <!-- 复杂字段手动补充示例 -->
       <!--
       <ElFormItem label="xxx" prop="xxx">
@@ -587,18 +722,19 @@ defineExpose({ init, initEdit })
 > **根节点规则（MANDATORY）**：`<template>` 的直接子元素有且仅有一个 `<div class="模块名-kebab-case">`，所有组件必须包裹在其内部。禁止多根节点。
 >
 > **输出前不变量（必须先检查）**：
-> 1. `GXPaginationTable` 与任意弹窗组件不能直接并列出现在 `<template>` 下
+> 1. `GxPaginationTable` 与任意弹窗组件不能直接并列出现在 `<template>` 下
 > 2. 如果出现双根节点，说明模板不合格，必须重写
 > 3. 该规则是硬约束，不因项目现有写法而放宽
 
 ```vue
 <!-- index.vue -->
 <script setup lang="ts">
-import { defineAsyncComponent, onMounted } from 'vue'
+import { defineAsyncComponent, onMounted, useTemplateRef } from 'vue'
+import type { ComponentExposed } from 'vue-component-type-helpers'
 import { ElMessage } from 'element-plus'
-import { useCompRef, useStateRef, useTablePage } from '@gx-web/tool'
+import { useStateRef, useTablePage } from '@gx-web/tool'
 import { getModelFromJson } from '@gx-web/core'
-import { GXPaginationTable, GXSearch, generateFormItems, generateTableColumns } from '@gx-web/ep-comp'
+import { GxPaginationTable, GxSearch, generateFormItems, generateTableColumns } from '@gx-web/ep-comp'
 import { XxxQueryModel, XxxListItemModel } from './model'
 import { loadPage, removeById } from './api'
 
@@ -608,7 +744,7 @@ defineOptions({
 
 const XxxAdd = defineAsyncComponent(() => import('./components/xxx-add.vue'))
 
-const XxxAddRef = useCompRef(XxxAdd)
+const XxxAddRef = useTemplateRef<ComponentExposed<typeof XxxAdd>>('XxxAddRef')
 
 const [search, , resetSearch] = useStateRef(() => getModelFromJson(XxxQueryModel))
 
@@ -657,7 +793,7 @@ onMounted(loadList)
 <!-- MANDATORY: 根节点必须是单个 div，class 为模块名 kebab-case -->
 <template>
   <div class="xxx-manage">
-    <GXPaginationTable
+    <GxPaginationTable
       v-model:page="page.current"
       v-model:limit="page.size"
       :columns="columns"
@@ -667,7 +803,7 @@ onMounted(loadList)
       @pagination="onChange"
     >
       <template #header>
-        <GXSearch v-model="search" :items="searchItems" @submit="loadList" @reset="resetSearch();reloadList()" />
+        <GxSearch v-model="search" :items="searchItems" @submit="loadList" @reset="resetSearch();reloadList()" />
       </template>
 
       <template #action="{ row }">
@@ -682,7 +818,7 @@ onMounted(loadList)
       <template #action-bar>
         <ElButton type="primary" @click="handleAdd">新增</ElButton>
       </template>
-    </GXPaginationTable>
+    </GxPaginationTable>
     <!-- 弹窗组件也必须在根 div 内部 -->
     <XxxAdd ref="XxxAddRef" @submitted="reloadList" />
   </div>
@@ -695,7 +831,7 @@ onMounted(loadList)
 
 ### useComponentMap
 
-组件映射管理，默认注册了 `input`（GXInput）和 `select`（GXSelect）。
+组件映射管理，默认注册了 `input`（GxInput）和 `select`（GxSelect）。
 
 ```ts
 const { registerComponent, registerComponents, getComponent, getAllComponents, hasComponent } = useComponentMap()

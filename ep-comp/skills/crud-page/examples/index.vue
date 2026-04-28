@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { defineAsyncComponent, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
-import { useCompRef, useStateRef, useTablePage } from '@gx-web/tool'
+import { defineAsyncComponent, h, onMounted, useTemplateRef } from 'vue'
+import type { ComponentExposed } from 'vue-component-type-helpers'
+import { ElButton, ElInput, ElMessage, ElPopconfirm, ElTag, ElTable, ElTableColumn } from 'element-plus'
+import { useStateRef, useTablePage } from '@gx-web/tool'
 import { getModelFromJson } from '@gx-web/core'
-import { GXPaginationTable, GXSearch, generateFormItems, generateTableColumns } from '@gx-web/ep-comp'
+import { GxPaginationTable, GxSearch, generateFormItems, generateTableColumns } from '@gx-web/ep-comp'
 import { AlarmQueryModel, AlarmVO } from './model'
 import { loadPage, removeById } from './api'
 
@@ -13,7 +14,7 @@ defineOptions({
 
 const AlarmAdd = defineAsyncComponent(() => import('./components/alarm-add.vue'))
 
-const AlarmAddRef = useCompRef(AlarmAdd)
+const AlarmAddRef = useTemplateRef<ComponentExposed<typeof AlarmAdd>>('AlarmAddRef')
 
 const [search, , resetSearch] = useStateRef(() => getModelFromJson(AlarmQueryModel))
 
@@ -30,8 +31,13 @@ const columns = generateTableColumns(AlarmVO, [
   'placeId',
   'alarmCode',
   'alarmTitle',
+  {
+    prop: 'alarmTime',
+    label: '告警时间',
+    minWidth: 180,
+    render: ({ row }) => h('span', row.alarmTime || '--')
+  },
   'alarmDetail',
-  'alarmTime',
   'createTime'
 ])
 
@@ -66,7 +72,7 @@ onMounted(loadList)
 
 <template>
   <div class="alarm-manage">
-    <GXPaginationTable
+    <GxPaginationTable
       v-model:page="page.current"
       v-model:limit="page.size"
       :columns="columns"
@@ -76,7 +82,19 @@ onMounted(loadList)
       @pagination="onChange"
     >
       <template #header>
-        <GXSearch v-model="search" :items="searchItems" @submit="loadList" @reset="resetSearch();reloadList()" />
+        <GxSearch v-model="search" :items="searchItems" @submit="loadList" @reset="resetSearch();reloadList()">
+          <template #form-item-device-sn>
+            <ElInput v-model="search.deviceSn" clearable placeholder="请输入设备SN">
+              <template #append>
+                <ElButton @click="loadList">快速查询</ElButton>
+              </template>
+            </ElInput>
+          </template>
+        </GxSearch>
+      </template>
+
+      <template #table-column-alarm-code="{ row }">
+        <ElTag :type="row.alarmCode ? 'danger' : 'info'">{{ row.alarmCode || '未配置' }}</ElTag>
       </template>
 
       <template #action="{ row }">
@@ -91,7 +109,24 @@ onMounted(loadList)
       <template #action-bar>
         <ElButton type="primary" @click="handleAdd">新增</ElButton>
       </template>
-    </GXPaginationTable>
+
+      <template #footer>
+        <div>当前页 {{ list.length }} 条，共 {{ page.total }} 条</div>
+      </template>
+
+      <template #default>
+        <ElTable :data="list" border>
+          <ElTableColumn prop="deviceSn" label="设备SN" min-width="180" />
+          <ElTableColumn prop="alarmTitle" label="告警标题" min-width="180" />
+          <ElTableColumn label="告警代码" min-width="160">
+            <template #default="{ row }">
+              <ElTag :type="row.alarmCode ? 'danger' : 'info'">{{ row.alarmCode || '未配置' }}</ElTag>
+            </template>
+          </ElTableColumn>
+          <ElTableColumn prop="createTime" label="入库时间" min-width="180" />
+        </ElTable>
+      </template>
+    </GxPaginationTable>
     <AlarmAdd ref="AlarmAddRef" @submitted="reloadList" />
   </div>
 </template>
