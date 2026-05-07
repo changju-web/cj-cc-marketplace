@@ -4,7 +4,7 @@ import type { FormInstance, FormRules } from 'element-plus'
 import { ElButton, ElInput, ElMessage } from 'element-plus'
 import { useStateRef, useToggle } from '@gx-web/tool'
 import { getModelFromJson } from '@gx-web/core'
-import { generateFormItems, GxForm } from '@gx-web/ep-comp'
+import { generateFormItems, GxForm, GxDialog } from '@gx-web/ep-comp'
 import { add, update } from '../api'
 import type { AlarmVO } from '../model'
 import { AlarmFormModel } from '../model'
@@ -96,13 +96,7 @@ defineExpose({ init, initEdit })
 </script>
 
 <template>
-  <ElDialog v-model="visible" :title="dialogTitle" width="500px" @closed="close">
-    <ElForm ref="FormRef" v-loading="loading" :model="form" :rules="rules" label-width="120px">
-      <GxForm :items="formItems" :form="form" />
-    </ElForm>
-    <template #footer>
-      <ElButton :loading="loading" @click="setVisible(false)">取消</ElButton>
-      <ElButton type="primary" :loading="loading" @click="handleSubmit">确定</ElButton>
-    </template>
-  </ElDialog>
+  <GxDialog v-model="visible" :title="dialogTitle" width="500px" @closed="close">
+    <GxForm :items="formItems" :form="form" />
+  </GxDialog>
 </template>
