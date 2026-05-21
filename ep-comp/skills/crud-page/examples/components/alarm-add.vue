@@ -92,11 +92,14 @@ const close = () => {
   resetForm()
 }
 
-defineExpose({ init, initEdit })
+defineExpose({ 
+  init, 
+  initEdit
+})
 </script>
 
 <template>
   <GxDialog v-model="visible" :title="dialogTitle" width="500px" @closed="close">
-    <GxForm :items="formItems" :form="form" />
+    <GxForm :items="formItems" v-model="form" />
   </GxDialog>
 </template>

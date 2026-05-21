@@ -692,21 +692,13 @@ defineExpose({ init, initEdit })
 </script>
 
 <template>
-  <ElDialog v-model="visible" :title="dialogTitle" width="500px" @closed="close">
-    <ElForm ref="FormRef" v-loading="loading" :model="form" :rules="rules" label-width="120px">
-      <GxForm :items="formItems" :form="form" />
-      <!-- 复杂字段手动补充示例 -->
-      <!--
-      <ElFormItem label="xxx" prop="xxx">
-        <CustomComponent v-model="form.xxx" />
-      </ElFormItem>
-      -->
-    </ElForm>
+  <GxDialog v-model="visible" :title="dialogTitle" width="500px" @closed="close">
+      <GxForm ref="FormRef" :items="formItems" v-model="form"  v-loading="loading" :rules="rules" label-width="120px" />
     <template #footer>
       <ElButton :loading="loading" @click="setVisible(false)">取消</ElButton>
       <ElButton type="primary" :loading="loading" @click="handleSubmit">确定</ElButton>
     </template>
-  </ElDialog>
+  </GxDialog>
 </template>
 ```
 
