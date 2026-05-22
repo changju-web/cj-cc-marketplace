@@ -12,11 +12,13 @@
 
 ## 自动模式组件模板
 
+标准字段直接用字符串简写，`GxForm` 内置取消/确认按钮，通过 `@cancel` / `@submit` 处理：
+
 ```vue
 <script setup lang="ts">
 import { computed, reactive, useTemplateRef } from 'vue'
 import type { FormRules } from 'element-plus'
-import { ElButton, ElMessage } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import { useStateRef, useToggle } from '@gx-web/tool'
 import { getModelFromJson } from '@gx-web/core'
 import { generateFormItems, GxDialog, GxForm } from '@gx-web/ep-comp'
@@ -34,10 +36,102 @@ const rules = reactive<FormRules>({
 })
 const formItems = generateFormItems(AlarmFormModel, ['alarmCode', 'alarmTitle'])
 const FormRef = useTemplateRef('FormRef')
+
+const handleSubmit = async () => {
+  try {
+    setLoading(true)
+    await FormRef.value?.validate()
+    isEdit.value ? await update(form.value) : await add(form.value)
+    ElMessage.success('操作成功')
+    setVisible(false)
+    emit('submitted')
+  }
+  finally {
+    setLoading(false)
+  }
+}
 </script>
+
+<template>
+  <GxDialog v-model="visible" title="新增 / 编辑" width="500px" @closed="resetForm">
+    <GxForm
+      ref="FormRef"
+      v-model="form"
+      :items="formItems"
+      :rules="rules"
+      :loading="loading"
+      label-width="120px"
+      @cancel="setVisible(false)"
+      @submit="handleSubmit"
+    />
+  </GxDialog>
+</template>
+```
+
+## 自动模式扩展手段
+
+复杂字段优先用以下扩展手段，**不要因为有部分字段复杂就整体切原生模式**：
+
+### 条件显隐
+
+```ts
+{ prop: 'approveRemark', hide: (form) => form.approveStatus !== 2 }
+```
+
+### 动态 props（响应式依赖）
+
+```ts
+{ prop: 'objectId', type: 'test-object-select', props: { appId: computed(() => form.value.appId) } }
+```
+
+### Radio 单选（内置 type）
+
+```ts
+{ prop: 'approveStatus', label: '审批状态', type: 'radio', props: { options: statusOptions } }
+```
+
+`options` 格式与 `select` 相同：`{ label, value, disabled? }[]`。
+
+### render: h() 自定义渲染（兜底，组件无法注册时使用）
+
+```ts
+import { h } from 'vue'
+import { ElRadio, ElRadioGroup } from 'element-plus'
+
+{
+  prop: 'approveStatus',
+  label: '审批状态',
+  render: (f) => h(
+    ElRadioGroup,
+    {
+      modelValue: f.approveStatus,
+      'onUpdate:modelValue': (v: number) => { f.approveStatus = v }
+    },
+    () => statusOptions.map(item => h(ElRadio, { value: item.value }, () => item.label))
+  )
+}
+```
+
+`render` 的 `f` 参数是响应式 form 对象，直接赋值即可触发更新。
+
+### 业务组件注册后使用
+
+在 `src/config/ep-comp.ts` 中注册：
+
+```ts
+compMap.registerComponents({ 'test-app-select': TestAppSelect })
+```
+
+之后直接用 `type`：
+
+```ts
+{ prop: 'appId', type: 'test-app-select', hide: (form) => form.approveStatus !== 1 }
 ```
 
 ## 原生模式组件模板
+
+仅当 `hide` / `computed props` / `render: h()` / 组件注册都无法覆盖时使用。
+切换前需列出原因并经用户确认。
 
 ```vue
 <script setup lang="ts">

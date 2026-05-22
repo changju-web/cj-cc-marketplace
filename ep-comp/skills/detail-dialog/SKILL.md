@@ -22,16 +22,22 @@ description: Add read-only detail dialogs to an existing ep-comp table page with
 
 ## Modes
 
-### 自动模式
+### 自动模式（默认）
 
-- 适用于标准只读字段展示
 - 生成方式：`generateDescriptionsItems + GxDescriptions`
+- 适用于绝大多数场景，包含以下扩展手段：
+  - 枚举映射：`render: (d) => h('span', labelMap[d.status])`
+  - 多字段合并：`render: (d) => h('span', \`${d.start} ~ ${d.end}\`)` + `span: N`
+  - 条件显隐：`hide: (d) => boolean`
+  - 自定义 span：`{ prop: 'xxx', span: 2 }`
+- **不能因为有一两个字段复杂就切换原生模式**
+- 前置要求：`DetailModel` 的展示字段必须有 `@FieldName` 装饰器，或在配置中手动提供 `label`
 
-### 原生模式
+### 原生模式（降级）
 
-- 适用于自定义渲染、条件显隐、复杂布局
 - 生成方式：`ElDescriptions + ElDescriptionsItem`
-- 触发条件：先解释复杂点，再经用户确认后生成
+- 仅当自动模式所有扩展手段都无法覆盖时使用
+- 触发流程：**先列出哪些扩展手段已尝试、为何不适用，再经用户确认后生成**
 
 ## When to Use
 

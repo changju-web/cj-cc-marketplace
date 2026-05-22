@@ -22,18 +22,33 @@ description: Add form-based dialogs to an existing ep-comp table page. Supports 
 - 改写 `GxPaginationTable` 主结构
 - 擅自重排 `columns` / `searchItems`
 
+## Dialog Component Constraint
+
+弹窗组件必须使用 `GxDialog`，不得使用 `ElDialog`。
+
+## Expose Contract
+
+- 新增/编辑：`init()` / `initEdit(row)`
+- 审批等单操作：`init(row)` 接收整行对象，或 `init(id)` 仅接收 id，视业务而定
+
 ## Modes
 
-### 自动模式
+### 自动模式（默认）
 
-- 适用于标准 input/select/textarea 等字段
 - 生成方式：`generateFormItems + GxForm`
+- 适用于绝大多数场景，包含以下扩展手段：
+  - 条件显隐：`hide: (form) => boolean`
+  - 动态 props：`props: { key: computed(...) }` 传递响应式依赖
+  - 自定义渲染：`render: (form) => h(Component, ...)` 处理 radio、强联动等无内置 type 的字段
+  - 业务组件：在 `ep-comp.ts` 中注册后直接用 `type: 'xxx-select'`
 
-### 原生模式
+- 判断标准：以上手段能覆盖的，都应优先用自动模式，**不能因为有一两个字段复杂就切换原生模式**
 
-- 适用于审核、强联动、自定义布局、复杂业务组件
+### 原生模式（降级）
+
 - 生成方式：`ElForm + ElFormItem + 业务组件`
-- 触发条件：先解释复杂点，再经用户确认后生成
+- 仅当自动模式的所有扩展手段（`hide` / `computed props` / `render: h()` / 组件注册）都无法覆盖时才使用
+- 触发流程：**先列出哪些扩展手段已尝试、为何不适用，再经用户确认后生成**
 
 ## Incremental Injection Rules
 
@@ -59,8 +74,9 @@ description: Add form-based dialogs to an existing ep-comp table page. Supports 
 
 一次成功输出至少应满足：
 
-- 自动模式与原生模式边界清晰
-- 复杂场景切原生模式前明确需要用户确认
+- 弹窗使用 `GxDialog`
+- 默认走自动模式，充分利用 `hide` / `computed props` / `render: h()` 覆盖复杂字段
+- 切原生模式前已列出扩展手段不足的原因并经用户确认
 - 生成的按钮只注入到 `#action` 或 `#action-bar`
 - 组件实例只挂载在根 `div` 内部
 - 不覆盖已有列表页结构

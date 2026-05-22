@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, useTemplateRef } from 'vue'
 import type { FormRules } from 'element-plus'
-import { ElButton, ElMessage } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import { useStateRef, useToggle } from '@gx-web/tool'
 import { getModelFromJson } from '@gx-web/core'
 import { generateFormItems, GxDialog, GxForm } from '@gx-web/ep-comp'
@@ -65,14 +65,15 @@ defineExpose({ init, initEdit })
 
 <template>
   <GxDialog v-model="visible" :title="dialogTitle" width="500px" @closed="close">
-    <GxForm ref="FormRef" v-model="form" :items="formItems" :rules="rules" label-width="120px" v-loading="loading" />
-    <template #footer>
-      <ElButton :loading="loading" @click="setVisible(false)">
-        取消
-      </ElButton>
-      <ElButton type="primary" :loading="loading" @click="handleSubmit">
-        确定
-      </ElButton>
-    </template>
+    <GxForm
+      ref="FormRef"
+      v-model="form"
+      :items="formItems"
+      :rules="rules"
+      :loading="loading"
+      label-width="120px"
+      @cancel="setVisible(false)"
+      @submit="handleSubmit"
+    />
   </GxDialog>
 </template>

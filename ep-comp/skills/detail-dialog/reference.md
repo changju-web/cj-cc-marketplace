@@ -4,19 +4,40 @@
 
 - detail：`init(id)`
 
+## 前置要求
+
+`generateDescriptionsItems` 依赖 `@FieldName` 装饰器读取字段标签。使用前确保 `DetailModel` 的展示字段都已标注：
+
+```ts
+import { FieldName } from '@gx-web/core'
+
+export class AlarmDetailModel {
+  @FieldName('告警代码')
+  alarmCode!: string
+
+  @FieldName('创建时间')
+  createTime!: string
+}
+```
+
 ## 自动模式组件模板
+
+标准字段用字符串简写，复杂字段用扩展手段，**不要因为有一两个字段复杂就整体切原生模式**：
 
 ```vue
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useToggle } from '@gx-web/tool'
+import { useLoadMap, useToggle } from '@gx-web/tool'
 import { generateDescriptionsItems, GxDescriptions, GxDialog } from '@gx-web/ep-comp'
 import { loadDetail } from '../api'
-import type { AlarmDetailModel } from '../model'
+import { AlarmDetailModel } from '../model'
 
 const [visible, setVisible] = useToggle(false)
-const [loading, setLoading] = useToggle(false)
-const detail = ref<AlarmDetailModel>()
+const currentId = ref('')
+
+const [detail, { load, loading, resetData }] = useLoadMap<AlarmDetailModel>(
+  () => loadDetail(currentId.value).then(res => res.data)
+)
 
 const items = generateDescriptionsItems(AlarmDetailModel, [
   'alarmCode',
@@ -27,30 +48,70 @@ const items = generateDescriptionsItems(AlarmDetailModel, [
 ])
 
 const init = async (id: string) => {
+  currentId.value = id
   setVisible(true)
-  setLoading(true)
-  try {
-    const { data } = await loadDetail(id)
-    detail.value = data
-  }
-  finally {
-    setLoading(false)
-  }
+  await load()
+}
+
+const close = () => {
+  resetData()
 }
 
 defineExpose({ init })
 </script>
 
 <template>
-  <GxDialog v-model="visible" title="详情" width="720px">
+  <GxDialog v-model="visible" title="详情" width="720px" @closed="close">
     <GxDescriptions v-model="detail" :items="items" :column="2" border :loading="loading" />
   </GxDialog>
 </template>
 ```
 
+## 自动模式扩展手段
+
+复杂字段优先用以下扩展手段，**不要因为有部分字段复杂就切换原生模式**：
+
+### 枚举映射（render: h()）
+
+```ts
+import { h } from 'vue'
+
+const statusMap = Object.fromEntries(statusOptions.map(o => [o.value, o.label]))
+
+{
+  prop: 'status',
+  render: (d) => h('span', statusMap[d.status] ?? '--')
+}
+```
+
+### 多字段合并展示（render: h() + span）
+
+```ts
+{
+  prop: 'startTime',
+  label: '测试周期',
+  span: 2,
+  render: (d) => h('span', `${d.startTime || '--'} ~ ${d.endTime || '--'}`)
+}
+```
+
+### 条件显隐
+
+```ts
+{ prop: 'approveRemark', hide: (d) => !d.approveRemark }
+```
+
+### 自定义 span
+
+```ts
+{ prop: 'approveRemark', span: 2 }
+```
+
+`render` 的 `d` 参数是响应式 detail 对象，直接读取即可。
+
 ## 原生模式组件模板
 
-适用于自定义渲染、条件显隐、复杂布局。切换前需经用户确认。
+仅当自动模式所有扩展手段都无法覆盖时使用。切换前需列出原因并经用户确认。
 
 ```vue
 <script setup lang="ts">
