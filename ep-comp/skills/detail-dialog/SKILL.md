@@ -20,13 +20,25 @@ description: Add read-only detail dialogs to an existing ep-comp table page with
 - 查询条件改造
 - 改写 `GxPaginationTable` 主结构
 
+## Modes
+
+### 自动模式
+
+- 适用于标准只读字段展示
+- 生成方式：`generateDescriptionsItems + GxDescriptions`
+
+### 原生模式
+
+- 适用于自定义渲染、条件显隐、复杂布局
+- 生成方式：`ElDescriptions + ElDescriptionsItem`
+- 触发条件：先解释复杂点，再经用户确认后生成
+
 ## When to Use
 
 当用户要的是以下场景时，优先使用这个 skill：
 
 - 详情按钮
 - 只读弹窗
-- `ElDescriptions` / 只读字段展示
 - 在现有 `table-page` 上追加详情能力
 
 ## Incremental Injection Rules
@@ -50,6 +62,8 @@ description: Add read-only detail dialogs to an existing ep-comp table page with
 - 生成 `DetailModel`
 - 生成 `loadDetail`
 - 详情组件暴露 `init(id)`
+- 自动模式与原生模式边界清晰
+- 复杂场景切原生模式前明确需要用户确认
 - 详情按钮只注入到 `#action`
 - 不混入提交型表单逻辑
 
