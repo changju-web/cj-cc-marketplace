@@ -11,14 +11,29 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```text
 .claude-plugin/
   marketplace.json            — Marketplace 清单（注册所有插件）
-cj-cc-plugin/                 — 单个插件目录
-  .claude-plugin/
-    plugin.json               — 插件元数据（名称、版本、作者）
-  skills/                     — 每个 skill 一个目录
-    <skill-name>/
+ep-comp/                      — 基于 @gx-web/ep-comp 的业务代码生成插件
+  .claude-plugin/plugin.json
+  skills/
+    crud-page/                — 从 Swagger/OpenAPI 生成完整 CRUD 页面
+    table-page/               — 从 Swagger/OpenAPI 生成纯表格分页页面
+    detail-dialog/            — 生成详情弹窗组件
+    form-dialog/              — 生成表单弹窗组件
+    <skill>/
       SKILL.md                — skill 指令（流程规则、触发条件、输出格式）
       reference.md            — API 签名与类型参考（从 monorepo 提取的知识）
       examples/               — 可落地的代码示例
+notify-hook/                  — Windows 任务栏闪烁通知 hook 插件
+  skills/setup/               — 安装 Toast 通知与 claude-focus:// 协议
+openspec-workflow/            — OpenSpec × Superpowers 协作流程编排插件
+  skills/
+    apply-with-superpowers/   — implementation 阶段的执行路由
+    brainstorming-to-propose/ — brainstorming → OpenSpec 提案流转
+mcp/                          — 共享 MCP 服务器配置（未注册到 marketplace）
+  .mcp.json                   — tavily / github / chrome-devtools / context7 / codegraph
+docs/
+  superpowers/
+    plans/                    — 历史实现计划
+    specs/                    — 历史设计规格
 ```
 
 ## Skill 文件职责分离
@@ -33,15 +48,15 @@ skill 中引用的组件和工具来自 monorepo `gx-web-lib`（`D:\Develop\Proj
 
 - `@gx-web/core` — 装饰器（`@FieldName`）、工具函数（`getModelFromJson`）
 - `@gx-web/tool` — Hooks（`useTablePage`、`useStateRef`）
-- `@gx-web/ep-comp` — 组件（`GXPaginationTable`、`GXForm`、`GXSearch`）和生成函数（`generateTableColumns`、`generateFormItems`）
+- `@gx-web/ep-comp` — 组件（`GxPaginationTable`、`GxForm`、`GxSearch`）和生成函数（`generateTableColumns`、`generateFormItems`）
 
 monorepo API 变更时，需要同步更新对应 skill 的 `reference.md`。
 
 ## 新增插件
 
 1. 在根目录创建以插件名称命名的目录（`kebab-case`）
-2. 在插件目录下创建 `.claude-plugin/plugin.json`
-3. 在 `.claude-plugin/marketplace.json` 的 `plugins` 数组中注册新插件
+2. 在插件目录下创建 `.claude-plugin/plugin.json`（含 `name`、`description`、`version`、`repository`、`author`）
+3. 在 `.claude-plugin/marketplace.json` 的 `plugins` 数组中注册新插件（`name` + `source` + `description`）
 
 ## 新增 Skill 规范
 
@@ -49,3 +64,7 @@ monorepo API 变更时，需要同步更新对应 skill 的 `reference.md`。
 2. 必须包含 `SKILL.md`（frontmatter 含 `name` 和 `description`）
 3. 如果依赖外部库 API，在同级创建 `reference.md` 并在 `SKILL.md` 中引用
 4. 提供至少一组 `examples/`
+
+## AGENTS.md
+
+`AGENTS.md` 是 Codex 版本的入口文件，结构与 CLAUDE.md 镜像，定位改为"Codex 插件 Marketplace"。新增插件或 skill 时需同步维护。
