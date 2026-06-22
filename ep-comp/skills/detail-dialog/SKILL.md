@@ -1,6 +1,6 @@
 ---
 name: detail-dialog
-description: Add read-only detail dialogs to an existing ep-comp table page without changing the table-page skeleton.
+description: "Generate or incrementally add @gx-web/ep-comp read-only detail dialogs to a table/list page. Use for requests like 详情弹窗、查看详情、详情按钮、只读详情、loadDetail、DetailModel、GxDescriptions, or adding a detail action to an existing table-page. Creates DetailModel, loadDetail, components/detail.vue, detail button, ref, handler, and component instance without changing the GxPaginationTable skeleton."
 ---
 
 # ep-comp 详情弹窗生成

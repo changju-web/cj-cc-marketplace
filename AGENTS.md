@@ -9,12 +9,16 @@ This file provides guidance to Codex (Codex.ai/code) when working with code in t
 ## 仓库结构
 
 ```text
-.Codex-plugin/
+.claude-plugin/
   marketplace.json            — Marketplace 清单（注册所有插件）
-cj-cc-plugin/                 — 单个插件目录
-  .Codex-plugin/
+ep-comp/                      — 基于 @gx-web/ep-comp 的业务代码生成插件
+  .claude-plugin/
     plugin.json               — 插件元数据（名称、版本、作者）
   skills/                     — 每个 skill 一个目录
+    crud-page/                — 兼容旧入口，生成完整 CRUD / CURD 页面
+    table-page/               — 生成列表页 / 查询页 / 分页表格底座
+    form-dialog/              — 生成新增、编辑、审核、审批等表单弹窗
+    detail-dialog/            — 生成只读详情弹窗
     <skill-name>/
       SKILL.md                — skill 指令（流程规则、触发条件、输出格式）
       reference.md            — API 签名与类型参考（从 monorepo 提取的知识）
@@ -40,8 +44,8 @@ monorepo API 变更时，需要同步更新对应 skill 的 `reference.md`。
 ## 新增插件
 
 1. 在根目录创建以插件名称命名的目录（`kebab-case`）
-2. 在插件目录下创建 `.Codex-plugin/plugin.json`
-3. 在 `.Codex-plugin/marketplace.json` 的 `plugins` 数组中注册新插件
+2. 在插件目录下创建 `.claude-plugin/plugin.json`
+3. 在 `.claude-plugin/marketplace.json` 的 `plugins` 数组中注册新插件
 
 ## 新增 Skill 规范
 

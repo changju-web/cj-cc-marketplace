@@ -1,6 +1,6 @@
 ---
 name: form-dialog
-description: Add form-based dialogs to an existing ep-comp table page. Supports automatic mode with `generateFormItems + GxForm` and native mode with `ElForm`, but native mode requires explicit user confirmation.
+description: "Generate or incrementally add @gx-web/ep-comp form dialogs to a table/list page. Use for requests like 新增弹窗、编辑弹窗、表单弹窗、审核弹窗、审批弹窗、提交弹窗、action dialog、给列表页加新增/编辑/审核按钮, or add FormModel/API/buttons/refs/handlers to an existing table-page. Uses GxDialog plus generateFormItems + GxForm by default, supports automatic mode and confirmed native ElForm fallback, and preserves the existing GxPaginationTable skeleton."
 ---
 
 # ep-comp 表单弹窗生成

@@ -1,6 +1,6 @@
 ---
 name: table-page
-description: Generate ep-comp table pages with `generateTableColumns`, `generateFormItems`, `useTablePage`, and `GxPaginationTable`, without generating dialog capabilities by default.
+description: "Generate @gx-web/ep-comp list/table/pagination page skeletons from Swagger, Knife4j, OpenAPI JSON, API examples, or existing module code. Use for requests like 生成列表页、查询页、分页表格、table-page、表格底座、先生成页面骨架、根据接口生成查询条件和表格. Produces QueryModel/ListItemModel, loadPage, GxSearch, generateFormItems, generateTableColumns, useTablePage, and GxPaginationTable stable slots (#header/#action/#action-bar). Use before adding form-dialog or detail-dialog; do not generate add/edit/audit/detail dialogs by default."
 ---
 
 # ep-comp 表格页生成
