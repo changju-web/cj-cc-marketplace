@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "process",
+            "command": "python",
+            "args": ["${ZCODE_PLUGIN_ROOT}/hooks/session_naming.py", "${CLAUDE_SESSION_ID}"],
+            "timeoutMs": 5000,
+            "statusMessage": "会话命名检查"
+          }
+        ]
+      }
+    ]
+  }
+}

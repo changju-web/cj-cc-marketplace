@@ -1,0 +1,11 @@
+{
+  "name": "session-naming",
+  "description": "ZCode 会话自动命名：Stop hook 按「MMDD｜类型｜主题」规范提示重命名会话标题，title_source=custom 防覆盖，附存量一次性回填脚本",
+  "version": "0.1.0",
+  "repository": "https://github.com/changju-web/cj-cc-marketplace",
+  "author": {
+    "name": "wangjiahui",
+    "email": "13226651554@163.com",
+    "url": "https://github.com/TurtleWXG"
+  }
+}
